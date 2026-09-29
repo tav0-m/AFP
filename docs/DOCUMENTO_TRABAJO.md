@@ -163,7 +163,27 @@ ocurrió una sola vez y no hay transiciones suficientes para aprender qué lo ga
 
 ![Regímenes y macro](../reports/figuras/15_regimenes_macro.png)
 
-### 4.7 Premios y castigos
+### 4.7 Comisiones: pagar más no compra más rentabilidad
+
+La comisión se cobra sobre el sueldo, aparte del 10%, y va de 0,46% (Uno) a 1,45% (Provida). Estar en la AFP más cara
+equivale a dejar de ahorrar 9,9% de la pensión autofinanciada: 0,96 UF al mes para el hombre tipo, o 135 frente a 43 UF
+pagadas en la vida laboral. Para compensarlo, Provida necesitaría rendir 0,41% más al año que Uno; entre nov-2019 y
+ago-2026 rindió −0,16% frente a sus pares. La que más rindió (Capital, +0,25%) tampoco alcanzó su equilibrio, y ninguna
+diferencia de rentabilidad entre AFP es estadísticamente distinta de cero.
+
+| AFP | Comisión | Costo en pensión vs Uno | Rentabilidad extra necesaria | Rentabilidad lograda vs pares |
+| --- | --- | --- | --- | --- |
+| Uno | 0,46% | — | — | −0,02% |
+| Modelo | 0,58% | −1,2% | +0,05% | −0,22% |
+| PlanVital | 1,16% | −7,0% | +0,29% | +0,09% |
+| Habitat | 1,27% | −8,1% | +0,34% | +0,14% |
+| Capital | 1,44% | −9,8% | +0,41% | +0,25% |
+| Cuprum | 1,44% | −9,8% | +0,41% | +0,13% |
+| Provida | 1,45% | −9,9% | +0,41% | −0,16% |
+
+![Comisiones](../reports/figuras/16_comisiones.png)
+
+### 4.8 Premios y castigos
 
 Las bandas oficiales son unas tres veces más anchas que la dispersión histórica entre AFP: 95% de las desviaciones de 36 meses frente a los pares es menor a 0,83 puntos, contra bandas de ±2,4 a ±2,9 puntos (±4,0 en la transición). Con la referencia de pares, solo 0,2% de los meses-AFP habría quedado fuera de la banda más estrecha. El incentivo real dependerá de cuánto se aleje la cartera de referencia oficial de lo que hoy invierten las AFP.
 
@@ -176,7 +196,10 @@ El diseño de inversión de los fondos generacionales es bueno; las palancas que
 3. **Desincentivar los traspasos reactivos.** Cambiarse de fondo después de las caídas no mejora la pensión esperada, y la reforma lo limita al asignar el fondo por edad. El ahorro voluntario, que sí puede elegir fondo, merece la misma advertencia.
 4. **La edad de pensión de las mujeres es la mayor palanca de género.** Explica 41% de la brecha de pensión total, más que las lagunas (27%) o el sueldo (18%). Incentivos a postergar voluntariamente el retiro, o información clara sobre su efecto, reducirían la brecha más que cualquier cambio en la inversión.
 5. **La PGU es el pilar que sostiene la suficiencia.** Lleva al quintil de menores ingresos a una tasa de reemplazo de 91% y es más de la mitad de la pensión de la mayoría de las mujeres. Su financiamiento y su reajuste pesan más en la pensión de ese grupo que la rentabilidad de su fondo.
-6. **Las bandas de premios y castigos pueden no morder.** Si la cartera de referencia se parece a lo que ya invierten las AFP, las desviaciones históricas son tres veces menores que las bandas y casi ninguna AFP pagaría o cobraría. Vale la pena monitorear desde abril de 2027 cuánto se separan las AFP de su referencia.
+6. **La comisión es la decisión que más controla el afiliado.** Elegir la AFP más barata vale casi 10% de pensión
+   autofinanciada, sin evidencia de que las caras rindan más. Informar la comisión en términos de pensión, no solo de
+   pesos al mes, haría visible ese costo.
+7. **Las bandas de premios y castigos pueden no morder.** Si la cartera de referencia se parece a lo que ya invierten las AFP, las desviaciones históricas son tres veces menores que las bandas y casi ninguna AFP pagaría o cobraría. Vale la pena monitorear desde abril de 2027 cuánto se separan las AFP de su referencia.
 
 ## 6. Limitaciones y trabajo futuro
 

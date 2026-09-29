@@ -300,6 +300,27 @@ class TestRegimenesMacro(unittest.TestCase):
         self.assertGreater(t, 3); self.assertLess(p, 0.01)
 
 
+class TestComisiones(unittest.TestCase):
+    def test_punto_equilibrio_iguala_la_pension(self):
+        from afp import comisiones, simulacion, config
+        R = np.random.default_rng(3).normal(0.003, 0.02, (400, 480, 5))
+        x = comisiones.punto_equilibrio(R, 0.01)
+        edades, _, aporte, _ = simulacion.perfil("H")
+        W = simulacion.pesos_defecto(edades, "H")
+        base = np.median(simulacion.acumular(R, W, aporte))
+        con_x = np.median(simulacion.acumular((1 + R) * (1 + x) ** (1 / 12) - 1, W, aporte))
+        self.assertAlmostEqual(con_x / base, 1 + 0.01 / config.SIM["tasa_cotizacion"], places=3)
+
+    def test_alfa_de_una_afp_identica_es_cero(self):
+        import pandas as pd
+        from afp import comisiones
+        meses = pd.period_range("2015-01", periods=60, freq="M")
+        r = np.random.default_rng(1).normal(0.004, 0.02, 60)
+        filas = [{"fondo": "A", "afp": a, "mes": m, "r": v, "w": 1.0} for a in ("X", "Y", "Z") for m, v in zip(meses, r)]
+        a = comisiones.alfa_por_afp(pd.DataFrame(filas))
+        np.testing.assert_allclose(a.alfa_anual, 0, atol=1e-12)
+
+
 class TestBandas(unittest.TestCase):
     def test_bandas_oficiales_en_config(self):
         from afp import config

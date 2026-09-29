@@ -411,3 +411,36 @@ def prediccion_regimenes(wf: pd.DataFrame, comp: pd.DataFrame):
                             f"p = {es(t.p_valor, 2)})",
                    "15_regimenes_macro.png",
                    nota="Walk-forward: reestimación anual con datos pasados. Macro: mindicador.cl (IPC, TPM, dólar, Imacec). Elaboración propia.")
+
+
+def comisiones(tab: pd.DataFrame):
+    """Rentabilidad extra que cada AFP necesita para compensar su comisión vs la que logró frente a sus pares."""
+    t = tab.sort_values("comision").reset_index(drop=True)
+    fig, ax = plt.subplots(figsize=(11, 5.4), facecolor=SUP); ax.set_facecolor(SUP)
+    for s in ("top", "right", "left"):
+        ax.spines[s].set_visible(False)
+    ax.spines["bottom"].set_color(EJE); ax.grid(axis="x", color=GRID, lw=0.8); ax.tick_params(colors=TXT2, length=0)
+    ax.set_axisbelow(True)
+    y = np.arange(len(t))[::-1]
+    c_logro, c_nec = COLOR_FONDO["A"], COLOR_ESTRATEGIA["Reactivo (market timing)"]
+    for yi, r in zip(y, t.itertuples()):
+        lo, hi = (r.alfa_comun - 1.96 * r.ee_alfa_comun) * 100, (r.alfa_comun + 1.96 * r.ee_alfa_comun) * 100
+        ax.plot([lo, hi], [yi, yi], color=c_logro, lw=2, alpha=0.35, solid_capstyle="round")
+        ax.plot(r.alfa_comun * 100, yi, "o", ms=8, color=c_logro)
+        ax.plot(r.rentabilidad_extra_para_compensar * 100, yi, "|", ms=18, mew=2.5, color=c_nec)
+        costo = (f"cuesta {es(r.costo_pension_pct_vs_mas_barata * 100, 1)}% de pensión" if r.costo_pension_pct_vs_mas_barata > 0
+                 else "referencia: la más barata")
+        ax.annotate(f"comisión {es(r.comision * 100, 2)}% · {costo}",
+                    (0.99, yi), xycoords=("axes fraction", "data"), ha="right", va="center", fontsize=8.5, color=TXT2)
+    ax.axvline(0, color=TXT2, lw=1)
+    ax.set_yticks(y); ax.set_yticklabels(t.afp, color=TXT)
+    ax.set_xlim(-1.3, 2.1); ax.set_ylim(-1.6, len(t) - 0.5)          # banda libre abajo para la leyenda
+    ax.plot([], [], "o", color=c_logro, label="rentabilidad lograda vs pares, nov-2019 a ago-2026 (IC 95%)")
+    ax.plot([], [], "|", ms=12, mew=2.5, color=c_nec, label="rentabilidad extra necesaria para compensar la comisión vs AFP Uno")
+    ax.legend(frameon=True, facecolor=SUP, edgecolor="none", framealpha=1, loc="lower left", fontsize=9, labelcolor=TXT,
+              bbox_to_anchor=(0, -0.02))
+    ax.set_xlabel("Puntos porcentuales de rentabilidad real al año (promedio de los 5 fondos)", color=TXT2)
+    return _cerrar(fig, ax, "¿Compensa la rentabilidad una comisión más alta? Ninguna AFP rindió lo suficiente\n"
+                            "costo en pensión = comisión extra ÷ 10% de cotización; comisiones vigentes desde el 01-10-2025",
+                   "16_comisiones.png",
+                   nota="Fuente: SP (comisiones y valores cuota). Hombre tipo, fondo por defecto, consenso 2026. Elaboración propia.")

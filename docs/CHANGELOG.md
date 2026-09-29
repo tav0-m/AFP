@@ -7,6 +7,10 @@
   Hallazgo 15 y figura 15: los regímenes predicen mejor que una normal (p < 0,001), pero la macro no agrega capacidad
   predictiva fuera de muestra (p = 0,98). Hojas Excel `Regimenes_macro` y `Regimenes_macro_efectos`.
 - Pruebas: 39 (transiciones, equivalencia con el forward-backward constante, variables sin mirar al futuro, test DM).
+- **Comisiones por AFP** (hoja de ruta 1.5): `comisiones.py` (costo en pensión, punto de equilibrio y rentabilidad relativa
+  con su error estándar). Hallazgo 16: estar en la AFP más cara equivale a perder 9,9% de la pensión autofinanciada, y
+  ninguna AFP rindió lo suficiente para compensarlo. Figura 16, hoja Excel `Comisiones_AFP` y sección en el tablero.
+  Pruebas: 41.
 
 ## 2026-09-30
 - **Microsimulación poblacional** (hoja de ruta 2.4): `microsimulacion.py`, una cohorte de 20.000 personas con ingreso

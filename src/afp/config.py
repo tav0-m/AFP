@@ -121,6 +121,13 @@ MICROSIM = {
     "focalizacion_pgu": 0.90,
 }
 
+# Comisiones por depósito de cotizaciones, % de la remuneración imponible, vigentes desde el 01-10-2025
+# (SP, "Sistema de AFP", spensiones.cl/portal/institucional/594/w3-propertyvalue-9897.html). Se cobran sobre el sueldo,
+# aparte de la cotización del 10%. desde_comun = primer mes con las 7 AFP actuales (AFP Uno inicia en oct-2019).
+COMISIONES = {"tasas": {"UNO": 0.0046, "MODELO": 0.0058, "PLANVITAL": 0.0116, "HABITAT": 0.0127,
+                        "CAPITAL": 0.0144, "CUPRUM": 0.0144, "PROVIDA": 0.0145},
+              "vigencia": "2025-10-01", "desde_comun": "2019-11"}
+
 # Incertidumbre de parámetros (bootstrap). IC de 90% = percentiles 5-95 de las réplicas.
 # bloque_medio: largo medio (meses) de los bloques del bootstrap estacionario de la historia.
 INCERTIDUMBRE = {"B_hmm": 200, "B_garch": 100, "B_pensiones": 200, "n_escenarios": 2000,

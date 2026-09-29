@@ -212,6 +212,18 @@ def construir(ruta, r: dict):
                notas=["Familia: meseta g0 hasta la edad a1 y baja lineal hasta g1 al retiro; réplica con multifondos.",
                       "Criterio: utilidad CRRA de la pensión total (con_reforma = cotización del empleador, rentabilidad protegida y PGU).",
                       "Grilla evaluada en escenarios de entrenamiento; resultados reportados en escenarios de prueba independientes."])
+    if r.get("comisiones") is not None:
+        cm = r["comisiones"]
+        fm = {c: pct for c in cm.columns if c.startswith(("comision", "costo_pension_pct", "rentabilidad_extra", "alfa", "ee_alfa"))}
+        fm |= {"comision_mensual_clp_sueldo_1m": "#,##0", "comision_total_vida_uf": "0.0", "costo_pension_uf_vs_mas_barata": "0.00",
+               "t_vs_equilibrio": "0.00", "comision": "0.00%"}
+        _tabla(wb, "Comisiones_AFP", cm, fm,
+               titulo="Comisiones por AFP: costo en pensión y rentabilidad necesaria para compensarlo",
+               notas=["Comisión = % del sueldo imponible, aparte del 10% (SP, vigente desde el 01-10-2025).",
+                      "Costo en pensión = (comisión − comisión más baja) / 10% × pensión autofinanciada (la pensión es lineal en los aportes).",
+                      "Rentabilidad extra para compensar = retorno real anual adicional que iguala esa pensión (fondo por defecto, consenso 2026).",
+                      "Alfa = rentabilidad real anual frente al promedio ponderado de las demás AFP, promedio de los 5 fondos; "
+                      "común = nov-2019 a ago-2026 (las 7 AFP). t_vs_equilibrio = (alfa − necesaria) / error estándar."])
     if r.get("tvtp_comparacion") is not None:
         fm = {"log_score_promedio": "0.0000", "tvtp_menos_modelo": "0.0000", "t_diebold_mariano": "0.00", "p_valor": "0.000",
               "prob_base": pct, "prob_con_+1sd": pct, "cambio_pp": pct}

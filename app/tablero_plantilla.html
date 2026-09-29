@@ -114,7 +114,7 @@ footer{margin-top:48px; padding-top:20px; border-top:1px solid var(--borde); dis
 
   <nav class="secciones" aria-label="Secciones">
     <a href="#hallazgos">Hallazgos</a><a href="#mercado">Mercado 2002–2026</a><a href="#glidepath">Glidepath oficial</a>
-    <a href="#estrategias">Pensión por estrategia</a><a href="#supuestos">Supuestos de mercado</a><a href="#reforma">Pensión total</a><a href="#poblacion">Población y género</a>
+    <a href="#estrategias">Pensión por estrategia</a><a href="#supuestos">Supuestos de mercado</a><a href="#reforma">Pensión total</a><a href="#poblacion">Población y género</a><a href="#comisiones">Comisiones</a>
     <a href="#incertidumbre">Incertidumbre</a><a href="#robustez">Robustez</a><a href="#bandas">Premios y castigos</a>
   </nav>
 
@@ -215,6 +215,16 @@ footer{margin-top:48px; padding-top:20px; border-top:1px solid var(--borde); dis
       </div>
     </div>
     <details><summary>Ver tabla por quintil</summary><div class="tabla" id="t-quintiles"></div></details>
+  </section>
+
+  <section id="comisiones">
+    <h2>Pagar más comisión no compra más rentabilidad</h2>
+    <p class="lectura" id="lectura-comisiones"></p>
+    <div class="lienzo">
+      <div class="tabla" id="t-comisiones"></div>
+      <p class="nota">Comisión: % del sueldo imponible, aparte del 10% (SP, vigente desde el 01-10-2025). Costo en pensión frente a la AFP más barata, para el hombre tipo con el fondo por defecto.
+        Rentabilidad lograda: frente al promedio de las demás AFP, nov-2019 a ago-2026, promedio de los 5 fondos, con su intervalo de 95%.</p>
+    </div>
   </section>
 
   <section id="incertidumbre">
@@ -491,6 +501,18 @@ function gBrecha(){
     `en ${pct(M_.pct_pgu_mayor_mitad)} de los casos de mujeres la PGU es más de la mitad de la pensión. La principal causa de la brecha de género es la ${top.factor.split(" (")[0].toLowerCase()}, ` +
     `con ${pct(top.aporte_pp_brecha / -MS.brecha_total)} de la brecha.`; }
 $("pob-H").onclick = () => { sexoPob = "H"; alternar("pob","H",gQuintiles); }; $("pob-M").onclick = () => { sexoPob = "M"; alternar("pob","M",gQuintiles); };
+
+/* ---------- 3d. comisiones ---------- */
+{ const C = D.comisiones || [];
+  if (C.length){
+    tabla("t-comisiones", ["AFP","Comisión","Con sueldo de $1 millón","Costo en pensión","Rentabilidad extra necesaria","Rentabilidad lograda (IC 95%)"],
+      C.map(r => [r.afp, pct(r.comision,2), "$" + nf(r.comision_mensual_clp_sueldo_1m,0), r.costo_pension_pct_vs_mas_barata > 0 ? "−" + pct(r.costo_pension_pct_vs_mas_barata,1) : "—",
+        r.rentabilidad_extra_para_compensar > 0 ? "+" + pct(r.rentabilidad_extra_para_compensar,2) : "—",
+        `${pctS(r.alfa_comun,2)} (${pctS(r.alfa_comun - 1.96*r.ee_alfa_comun,1)} a ${pctS(r.alfa_comun + 1.96*r.ee_alfa_comun,1)})`]));
+    const cara = C.reduce((a,b) => b.comision > a.comision ? b : a), barata = C.reduce((a,b) => b.comision < a.comision ? b : a);
+    $("lectura-comisiones").textContent = `La comisión se cobra sobre el sueldo, aparte del 10%. Estar en ${cara.afp} en vez de ${barata.afp} equivale a dejar de ahorrar ` +
+      `${pct(cara.costo_pension_pct_vs_mas_barata,1)} de la pensión autofinanciada. Para compensarlo, ${cara.afp} necesitaría rendir ${pct(cara.rentabilidad_extra_para_compensar,2)} más al año; ` +
+      `ninguna AFP lo logró frente a sus pares, y las diferencias de rentabilidad entre AFP no son estadísticamente distinguibles de cero.`; } }
 
 /* ---------- 4. incertidumbre ---------- */
 function gInc(){

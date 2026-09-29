@@ -221,3 +221,22 @@ Resultado: los regímenes mejoran claramente la predicción frente a la normal, 
 El resultado se mantiene con λ = 0,1 (sobreajusta: −0,06 por mes) y λ = 10 (converge al constante). El BIC de la
 muestra completa también prefiere el modelo constante. Lectura: el régimen de tasas volátiles se inició una sola
 vez (2019), así que no hay transiciones suficientes para aprender sus gatillos.
+
+## 13. Comisiones por AFP (`comisiones.py`)
+
+Comisiones por depósito de cotizaciones vigentes desde el 01-10-2025 (SP): Uno 0,46%, Modelo 0,58%, PlanVital 1,16%,
+Habitat 1,27%, Capital y Cuprum 1,44%, Provida 1,45% del sueldo imponible.
+
+- **Costo en pensión**: la comisión se cobra sobre el sueldo, aparte del 10%, así que no reduce el saldo. Para
+  expresarla en pensión se pregunta cuánta pensión daría ese dinero ahorrado; como la pensión es lineal en los aportes,
+  costo = (c − c_min) / 10% × pensión autofinanciada.
+- **Punto de equilibrio**: la rentabilidad real extra anual x (sobre todos los fondos) que hace que el 10% con retorno
+  r + x iguale la pensión mediana de cotizar 10% + (c − c_min) con retorno r. Se busca por bisección sobre los
+  escenarios de consenso 2026 (fondo por defecto, hombre tipo).
+- **Rentabilidad lograda (alfa)**: rentabilidad real anual de cada AFP menos la del promedio ponderado por afiliados de
+  las demás AFP del mismo fondo, en los meses en que ambas existen; promedio de los 5 fondos. La ventana común es
+  nov-2019 a ago-2026, porque AFP Uno parte en oct-2019. El error estándar es tracking error / √años; para el promedio
+  se usa el promedio de los errores de cada fondo (conservador, porque los fondos están muy correlacionados).
+
+Limitación: 82 meses son pocos para distinguir diferencias de rentabilidad de 0,1 a 0,3 puntos, y los valores cuota ya
+descuentan las comisiones implícitas de las inversiones, que no son iguales entre AFP.

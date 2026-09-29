@@ -14,7 +14,7 @@ en vigencia de los fondos generacionales (01-04-2027).
 | 1.2 | ✅ **Glidepath oficial de los 10 fondos generacionales** (límites de activos de crecimiento de la Res. Ex. 1195) | Hecho (29-09-2026): la ventaja mediana del ciclo de vida sube de +20% a +46%. Pendiente: reemplazar la curva de consulta reescalada por la tabla definitiva cuando la SP la publique en formato legible | Bajo |
 | 1.3 | **Cartera de inversiones por fondo** (SP, estadísticas financieras mensuales desde 2000) | Atribución por clase de activo: explica *por qué* el E perdió su rol de refugio (duración, tasas) | Medio |
 | 1.4 | ✅ **Pensión total**: PGU, aumento de cotización del empleador (Ley 21.735) y beneficiarios de sobrevivencia | Pasa de "pensión autofinanciada" a la pensión que recibe la persona | Medio |
-| 1.5 | **Comisiones por AFP** | Pensión neta por administradora | Bajo |
+| 1.5 | ✅ **Comisiones por AFP** | Pensión neta por administradora | Bajo |
 
 ## Fase 2 — Modelos de nivel investigación (1–3 meses)
 

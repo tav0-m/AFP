@@ -35,7 +35,8 @@ Este proyecto usa 24 años de datos oficiales para responder tres preguntas:
 | 12 | El glidepath oficial está muy cerca del óptimo, y la PGU justifica llegar al retiro con más riesgo. | Maximizando la utilidad CRRA de la pensión total (hombre, consenso 2026, escenarios de prueba), el mejor glidepath de la familia supera al oficial en solo +0,3% a +3,1% de pensión equivalente cierta (aversión γ de 2 a 5); el fondo por defecto de la ley queda -9% a -1% bajo el oficial. Con γ = 3, el óptimo llega al retiro con 70% en crecimiento si se cuenta la PGU y 40% sin ella (el oficial, 29%): la PGU actúa como un bono. |
 | 13 | En la población real la pensión depende sobre todo del ingreso y de las lagunas: la PGU la vuelve muy progresiva. | Microsimulación de 20 mil personas con ingreso y densidad calibrados con la SP (consenso 2026, fondo por defecto): tasa de reemplazo total mediana 63% en hombres y 49% en mujeres (solo con el 10%: 27% y 14%). Del quintil 1 al 5 la tasa total baja de 91% a 50% (hombres). La PGU es más de la mitad de la pensión en 56% de los casos de mujeres. El ciclo de vida sube la pensión total +3% en el quintil 1 y +9% en el 5: la PGU amortigua su efecto en los de menores ingresos. |
 | 14 | La edad de pensión es la principal causa de la brecha de género, por sobre las lagunas y el sueldo. | La pensión total mediana de una mujer es 36% menor que la de un hombre. Descomposición de Shapley: densidad de cotización 9,7 pp; nivel de ingreso 6,6 pp; edad de pensión (60 vs 65) 14,8 pp; esperanza de vida (tabla de mortalidad) 4,1 pp. El factor más importante es «Edad de pensión (60 vs 65)», con 41% de la brecha. |
-| 15 | Los regímenes mejoran la predicción del mes siguiente, pero las variables macro no ayudan a anticiparlos. | Validación fuera de muestra 2015-2026 (140 meses, reestimación anual): el HMM supera a una normal sin regímenes en +0,74 de log-score por mes (Diebold-Mariano p = 0,001). Agregar IPC, TPM, dólar e Imacec a las transiciones (TVTP) no mejora: -0,001 por mes (p = 0,98). Dentro de muestra, una TPM que sube 1 desviación estándar eleva la probabilidad de pasar de la calma a la crisis de 4% a 16%, pero el quiebre de 2019 ocurrió una sola vez: no hay transiciones suficientes para aprender qué lo gatilla. |
+| 15 | Pagar más comisión no compra más rentabilidad: ninguna AFP rindió lo suficiente para compensar su comisión. | Las comisiones van de 0,46% (Uno) a 1,45% (Provida) del sueldo. Como se cobran aparte de la cotización, la diferencia equivale a dejar de ahorrar 9,9% de la pensión autofinanciada (0,96 UF al mes para el hombre tipo; 135 vs 43 UF pagadas en la vida laboral). Para compensarla, Provida necesitaría rendir 0,41% más al año; entre nov-2019 y ago-2026 rindió -0,16% frente a sus pares (t vs equilibrio -2,1). La que más rindió (Capital, +0,25%) tampoco alcanzó su equilibrio (0,41%), y ninguna diferencia de rentabilidad es significativa. |
+| 16 | Los regímenes mejoran la predicción del mes siguiente, pero las variables macro no ayudan a anticiparlos. | Validación fuera de muestra 2015-2026 (140 meses, reestimación anual): el HMM supera a una normal sin regímenes en +0,74 de log-score por mes (Diebold-Mariano p = 0,001). Agregar IPC, TPM, dólar e Imacec a las transiciones (TVTP) no mejora: -0,001 por mes (p = 0,98). Dentro de muestra, una TPM que sube 1 desviación estándar eleva la probabilidad de pasar de la calma a la crisis de 4% a 16%, pero el quiebre de 2019 ocurrió una sola vez: no hay transiciones suficientes para aprender qué lo gatilla. |
 <!-- HALLAZGOS:FIN -->
 
 Todas las cifras se recalculan con `python run_pipeline.py`; esta tabla la **reescribe el pipeline** desde los datos.
@@ -52,6 +53,7 @@ Todas las cifras se recalculan con `python run_pipeline.py`; esta tabla la **ree
 ![Población](reports/figuras/13_poblacion_quintiles.png)
 ![Brecha de género](reports/figuras/14_brecha_genero.png)
 ![Regímenes y macro](reports/figuras/15_regimenes_macro.png)
+![Comisiones](reports/figuras/16_comisiones.png)
 
 ---
 
@@ -60,7 +62,7 @@ Todas las cifras se recalculan con `python run_pipeline.py`; esta tabla la **ree
 ```bash
 pip install -r requirements.txt       # o: make instalar
 python run_pipeline.py                # o: make pipeline   (~3 min con 8 núcleos, todo desde los datos crudos)
-python -m unittest discover -s tests  # o: make pruebas    (39 pruebas, ~20 s)
+python -m unittest discover -s tests  # o: make pruebas    (41 pruebas, ~20 s)
 ```
 
 Con Docker (mismo resultado en cualquier máquina):
@@ -103,6 +105,7 @@ proyecto-afp/
 │   ├── optimo.py              # glidepath óptimo por utilidad CRRA (entrenamiento/prueba)
 │   ├── microsimulacion.py     # cohorte de 20.000 personas: ingreso, lagunas, género (Shapley)
 │   ├── regimenes_macro.py     # HMM con transiciones que dependen de la macro (TVTP), walk-forward
+│   ├── comisiones.py          # comisiones por AFP: costo en pensión y rentabilidad necesaria
 │   ├── bandas.py              # riesgo de premios y castigos (36 meses móviles)
 │   ├── figuras.py             # gráficos (paleta validada para daltonismo)
 │   └── reporte_excel.py       # reporte maestro + simulador en fórmulas

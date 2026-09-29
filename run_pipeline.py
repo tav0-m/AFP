@@ -14,7 +14,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 from afp import (bandas, config, econometria, escenarios, etl_valores_cuota,  # noqa: E402
-                 figuras, incertidumbre, microsimulacion, mortalidad, optimo, reforma, regimenes_macro, reporte_excel, retornos, robustez,
+                 comisiones, figuras, incertidumbre, microsimulacion, mortalidad, optimo, reforma, regimenes_macro, reporte_excel, retornos, robustez,
                  simulacion)
 
 NOMBRES_REGIMEN = {3: ["Calma", "Tasas volátiles (post-2019)", "Crisis bursátil"],
@@ -107,6 +107,10 @@ def main():
     micro = microsimulacion.evaluar(R_cons)
     ref_res = pd.concat([reforma.resumen(pt[s]).assign(sexo=s) for s in ("H", "M")], ignore_index=True)
     ref_ing = pd.concat([reforma.por_ingreso(R_cons, s).assign(sexo=s) for s in ("H", "M")], ignore_index=True)
+    paso("4b3c. Comisiones por AFP (costo en pensión y rentabilidad necesaria)")
+    ref_h10 = ref_res[(ref_res.sexo == "H") & (ref_res.estrategia == "Por defecto (ley)")
+                      & (ref_res.capa == "Solo 10% del trabajador")].mediana.iloc[0]
+    com = comisiones.evaluar(bandas.retornos_mensuales_afp(df), R_cons[:3000], ref_h10)
     del R_cons
 
     paso("4b4. Glidepath óptimo (utilidad CRRA de la pensión total, entrenamiento/prueba)")
@@ -137,6 +141,7 @@ def main():
     figuras.glidepath()
     figuras.glidepath_optimo(opt_res)
     figuras.poblacion_quintiles(micro["quintil"])
+    figuras.comisiones(com["tabla"])
     if tvtp is not None:
         figuras.prediccion_regimenes(tvtp["walk_forward"], tvtp["comparacion"])
     figuras.brecha_genero(micro["brecha"])
@@ -171,6 +176,8 @@ def main():
     qH = ms_q[ms_q.sexo == "H"].set_index("quintil")
     top = ms_b.iloc[ms_b.aporte_pp_brecha.idxmax()]
     tc = tvtp["comparacion"].set_index("modelo") if tvtp is not None else None
+    ct = com["tabla"].set_index("afp"); barata, cara = ct.comision.idxmin(), ct.comision.idxmax()
+    mejor = ct.alfa_comun.idxmax()
     ef = tvtp["efectos"] if tvtp is not None else None
     n_pers = f"{config.MICROSIM['n_personas'] // 1000} mil"
     hallazgos = [
@@ -251,6 +258,15 @@ def main():
          f"La pensión total mediana de una mujer es {-ms_b.attrs['brecha']:.0%} menor que la de un hombre. Descomposición de Shapley: "
          + "; ".join(f"{r.factor.lower()} {r.aporte_pp_brecha * 100:.1f} pp" for r in ms_b.itertuples() if "Residuo" not in r.factor)
          + f". El factor más importante es «{top.factor}», con {top.aporte_pp_brecha / -ms_b.attrs['brecha']:.0%} de la brecha."),
+        ("Pagar más comisión no compra más rentabilidad: ninguna AFP rindió lo suficiente para compensar su comisión.",
+         f"Las comisiones van de {ct.comision.min():.2%} ({barata}) a {ct.comision.max():.2%} ({cara}) del sueldo. Como se cobran aparte "
+         f"de la cotización, la diferencia equivale a dejar de ahorrar {ct.loc[cara, 'costo_pension_pct_vs_mas_barata']:.1%} de la pensión "
+         f"autofinanciada ({ct.loc[cara, 'costo_pension_uf_vs_mas_barata']:.2f} UF al mes para el hombre tipo; "
+         f"{ct.loc[cara, 'comision_total_vida_uf']:.0f} vs {ct.loc[barata, 'comision_total_vida_uf']:.0f} UF pagadas en la vida laboral). "
+         f"Para compensarla, {cara} necesitaría rendir {ct.loc[cara, 'rentabilidad_extra_para_compensar']:.2%} más al año; entre nov-2019 y "
+         f"ago-2026 rindió {ct.loc[cara, 'alfa_comun']:+.2%} frente a sus pares (t vs equilibrio {ct.loc[cara, 't_vs_equilibrio']:.1f}). "
+         f"La que más rindió ({mejor}, {ct.loc[mejor, 'alfa_comun']:+.2%}) tampoco alcanzó su equilibrio "
+         f"({ct.loc[mejor, 'rentabilidad_extra_para_compensar']:.2%}), y ninguna diferencia de rentabilidad es significativa."),
     ] + ([
         ("Los regímenes mejoran la predicción del mes siguiente, pero las variables macro no ayudan a anticiparlos.",
          f"Validación fuera de muestra 2015-2026 ({int(tc.loc['HMM constante', 'meses'])} meses, reestimación anual): el HMM "
@@ -283,6 +299,7 @@ def main():
         "Market Assumptions 2026).",
         "Reforma de pensiones: Ley N.º 21.735; Subsecretaría de Previsión Social, Nota Técnica (ago-2025), tablas 1, 3 y 5. "
         "PGU y umbrales de pensión base: SP (vigentes desde el 01-02-2026).",
+        "Comisiones de las AFP (vigentes desde el 01-10-2025): SP, Sistema de AFP (spensiones.cl).",
         "Variables macro (IPC, TPM, dólar observado, Imacec): API pública de mindicador.cl, que republica series del BCCh y el INE.",
     ]
     res = dict(rango_datos=f"{vc.fecha.min():%d-%m-%Y} a {vc.fecha.max():%d-%m-%Y}", hallazgos=hallazgos,
@@ -291,6 +308,7 @@ def main():
                bic_texto="; ".join(f"K={int(r.K)}: BIC {r.BIC:,.1f}" for r in tabla_bic.itertuples()),
                transicion=modelo["A"], garch=garch, montecarlo=mc, sensibilidad=sens,
                backtest=pd.concat([b.assign(sexo=s) for s, b in back.items()]), bandas=fb, robustez=rob, esg=esg, reforma=ref_res, reforma_ingreso=ref_ing, optimo=opt_res,
+               comisiones=com["tabla"],
                tvtp_comparacion=tvtp["comparacion"] if tvtp is not None else None,
                tvtp_efectos=tvtp["efectos"] if tvtp is not None else None,
                micro_sexo=micro["sexo"], micro_quintil=micro["quintil"], micro_brecha=micro["brecha"],
@@ -316,6 +334,7 @@ def main():
     opt_res.to_csv(config.DATA_PROC / "glidepath_optimo.csv", index=False, float_format="%.5f")
     for k in ("sexo", "quintil", "brecha"):
         micro[k].to_csv(config.DATA_PROC / f"microsimulacion_{k}.csv", index=False, float_format="%.5f")
+    com["tabla"].to_csv(config.DATA_PROC / "comisiones_afp.csv", index=False, float_format="%.6f")
     if tvtp is not None:
         tvtp["walk_forward"].to_csv(config.DATA_PROC / "regimenes_macro_walk_forward.csv", float_format="%.6f")
         tvtp["comparacion"].to_csv(config.DATA_PROC / "regimenes_macro_comparacion.csv", index=False, float_format="%.6f")
@@ -352,6 +371,7 @@ def main():
            "reforma": {"capas": ref_res.round(4).to_dict("records"), "ingreso": ref_ing.round(4).to_dict("records"),
                        "pgu": reforma.parametros_uf()},
            "optimo": opt_res.round(5).to_dict("records"),
+           "comisiones": com["tabla"].round(6).to_dict("records"),
            "microsimulacion": {"sexo": micro["sexo"].round(4).to_dict("records"),
                                "quintil": micro["quintil"].round(4).to_dict("records"),
                                "brecha": micro["brecha"].round(4).to_dict("records"),
