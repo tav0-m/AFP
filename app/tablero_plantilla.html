@@ -141,7 +141,9 @@ footer{margin-top:48px; padding-top:20px; border-top:1px solid var(--borde); dis
     <div class="lienzo">
       <div class="barra"><div class="leyenda" id="ley-glide"></div></div>
       <div class="grafico" id="g-glide"></div>
-      <p class="nota">Curva de la consulta pública (jul-2026) digitalizada y reescalada al tope definitivo de 95%. Cartera de multifondos a mar-2026.</p>
+      <p class="nota">Curva de la consulta pública (jul-2026) digitalizada y reescalada al tope definitivo de 95%. Cartera de multifondos a mar-2026.
+        Óptimo: glidepath de la familia «meseta y bajada lineal» que maximiza la utilidad CRRA (γ = 3) de la pensión total con la reforma, evaluado en escenarios de prueba.</p>
+      <p class="lectura" id="lectura-optimo"></p>
     </div>
   </section>
 
@@ -307,7 +309,10 @@ function gMercado(){
 
 /* ---------- 2. glidepath ---------- */
 const G = D.glidepath, GM = G.crecimiento_multifondos;
-$("ley-glide").innerHTML = `<span><i style="background:var(--sCV)"></i>Fondos generacionales (máximo oficial)</span><span><i style="background:var(--sDef)"></i>Ley de multifondos, fondo por defecto (hombre)</span>`;
+const OPT = D.optimo ? D.optimo.find(r => r.con_reforma && r.gamma === 3) : null;
+$("ley-glide").innerHTML = `<span><i style="background:var(--sCV)"></i>Fondos generacionales (máximo oficial)</span><span><i style="background:var(--sDef)"></i>Ley de multifondos, fondo por defecto (hombre)</span>` +
+  (OPT ? `<span><i style="background:var(--fB)"></i>Óptimo con PGU (γ = 3)</span>` : "");
+const gOpt = e => OPT.g0 + (OPT.g1 - OPT.g0) * Math.min(Math.max((e - OPT.a1) / (65 - OPT.a1), 0), 1);
 function mezcla(p){ return p.map((v,j) => [v,FONDOS[j]]).filter(([v]) => Math.abs(v) > 1e-4).map(([v,f]) => `${nf(v*100,0)}% ${f}`).join(" + ").replace("+ -","− "); }
 function gGlide(){
   const alto = 330, [s, w] = lienzo("g-glide", alto), m = {l:40, r:62, t:12, b:30};
@@ -320,6 +325,7 @@ function gGlide(){
   const ley = e => e <= 35 ? GM.B : e <= 55 ? GM.C : GM.D;
   el("path", {d: eds.map((e,i) => `${i?"L":"M"}${x(e)},${y(ley(e))}`).join(""), style:"fill:none;stroke:var(--sDef);stroke-width:2"}, s);
   el("path", {d: eds.map((e,i) => `${i?"L":"M"}${x(e).toFixed(1)},${y(G.crecimiento[e-e0]).toFixed(1)}`).join(""), style:"fill:none;stroke:var(--sCV);stroke-width:2.5"}, s);
+  if (OPT) el("path", {d: eds.filter(e => e <= 65).map((e,i) => `${i?"L":"M"}${x(e).toFixed(1)},${y(gOpt(e)).toFixed(1)}`).join(""), style:"fill:none;stroke:var(--fB);stroke-width:2;stroke-dasharray:6 4"}, s);
   el("line", {x1:x(65), x2:x(65), y1:m.t, y2:alto-m.b, style:"stroke:var(--eje)"}, s);
   const guia = el("line", {y1:m.t, y2:alto-m.b, style:"stroke:var(--tinta2)", opacity:0}, s);
   const pto = el("circle", {r:4.5, style:"fill:var(--sup);stroke:var(--sCV);stroke-width:2", opacity:0}, s);
@@ -328,10 +334,14 @@ function gGlide(){
     const e = Math.round(Math.min(Math.max(x.inv(px),20),75)), g = G.crecimiento[e-e0];
     for (const a of ["x1","x2"]) guia.setAttribute(a, x(e)); guia.setAttribute("opacity",1);
     pto.setAttribute("cx", x(e)); pto.setAttribute("cy", y(g)); pto.setAttribute("opacity",1);
-    tip(ev, `<div class="t">${e} años</div>` + fila("--sCV","Glidepath oficial", pct(g,0)) + fila("--sDef","Ley, por defecto", pct(ley(e),0)) +
+    tip(ev, `<div class="t">${e} años</div>` + fila("--sCV","Glidepath oficial", pct(g,0)) + fila("--sDef","Ley, por defecto", pct(ley(e),0)) + (OPT && e <= 65 ? fila("--fB","Óptimo con PGU", pct(gOpt(e),0)) : "") +
       `<div class="f"><span>Réplica con multifondos</span><b class="num">${mezcla(G.pesos[e-e0])}</b></div>`); });
   zona.addEventListener("pointerleave", () => { guia.setAttribute("opacity",0); pto.setAttribute("opacity",0); ocultar(); });
 }
+
+if (OPT){ const sin = D.optimo.find(r => !r.con_reforma && r.gamma === 3);
+  $("lectura-optimo").textContent = `El glidepath oficial queda a solo ${pct(OPT.optimo_vs_oficial,1)} del óptimo en pensión equivalente cierta, y el fondo por defecto de la ley ${pctS(OPT.defecto_vs_oficial,1)} bajo el oficial. ` +
+    `Contando la PGU, el óptimo llega al retiro con ${pct(OPT.g1)} en crecimiento; sin la PGU, con ${pct(sin.g1)}. La PGU funciona como un bono y permite tomar más riesgo.`; }
 
 /* ---------- 3. rangos (Monte Carlo y supuestos) ---------- */
 function rangos(id, filas, opciones={}){

@@ -8,6 +8,10 @@
   pasa de 27% a 58% con la reforma completa.
 - Workflow `pages.yml`: publica el tablero y el simulador en GitHub Pages en cada cambio de `app/`.
 - Pruebas: 27 (calendarios de cotización, extinción de la CRP, focalización de la PGU, capas que suman el total).
+- **Glidepath óptimo** (hoja de ruta 2.3): `optimo.py` busca la mejor trayectoria de la familia "meseta y bajada" por
+  utilidad CRRA de la pensión total (γ 2, 3 y 5; con y sin reforma), con entrenamiento y prueba separados y en paralelo.
+  Hallazgo 12, figura 12, hoja Excel `Glidepath_optimo` y línea en el tablero. El oficial queda a 0,3%-3,1% del óptimo.
+- Salida `.csv.gz` reproducible (gzip sin marca de tiempo). Pruebas: 29.
 
 ## 2026-09-29 (tarde)
 - **Escenarios forward-looking** (hoja de ruta 2.1): `escenarios.simular(objetivo=...)` recentra cada fondo en un retorno

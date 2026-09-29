@@ -32,6 +32,7 @@ Este proyecto usa 24 años de datos oficiales para responder tres preguntas:
 | 9 | La ventaja del ciclo de vida es, en el fondo, una apuesta a la prima de la renta variable, y 24 años de historia no la aseguran. | Remuestreando la historia por bloques (200 historias), la prima real del A sobre el E va de -2,0% a +7,2% (IC 90%) y explica la ventaja del ciclo de vida (correlación 0,94). El ciclo de vida gana en la mediana en 86% de las historias; cuando la prima es negativa, pierde. |
 | 10 | Con las expectativas de mercado actuales, la ventaja del ciclo de vida es real pero mucho menor que la histórica. | Recentrando los escenarios en el consenso 2026 (renta fija UF 2,52%, renta variable global 4,4% real): Fondo A 4,1% y E 2,7% real/año; ciclo de vida vs por defecto +12% en la mediana (vs +46% con la historia), percentil 5 -2%, gana en 68% de los escenarios. Sin prima de crecimiento: -1%. La probabilidad de alcanzar una tasa de reemplazo de 40% es 10% (por defecto) y 25% (ciclo de vida). |
 | 11 | La reforma de 2025 cambia más la pensión que cualquier estrategia de inversión: la tasa de reemplazo se duplica. | Fondo por defecto, consenso 2026. Hombre: solo con el 10% del trabajador, tasa de reemplazo mediana 27% (10% llega a 40%); con cotización del empleador, rentabilidad protegida y PGU, 58% (98% llega a 40%). Mujer (PGU desde los 65): 17% → 43%. La PGU es progresiva: con sueldo de 15 UF la tasa total es 69% y con 60 UF, 40%. |
+| 12 | El glidepath oficial está muy cerca del óptimo, y la PGU justifica llegar al retiro con más riesgo. | Maximizando la utilidad CRRA de la pensión total (hombre, consenso 2026, escenarios de prueba), el mejor glidepath de la familia supera al oficial en solo +0,3% a +3,1% de pensión equivalente cierta (aversión γ de 2 a 5); el fondo por defecto de la ley queda -9% a -1% bajo el oficial. Con γ = 3, el óptimo llega al retiro con 70% en crecimiento si se cuenta la PGU y 40% sin ella (el oficial, 29%): la PGU actúa como un bono. |
 <!-- HALLAZGOS:FIN -->
 
 Todas las cifras se recalculan con `python run_pipeline.py`; esta tabla la **reescribe el pipeline** desde los datos.
@@ -44,6 +45,7 @@ Todas las cifras se recalculan con `python run_pipeline.py`; esta tabla la **ree
 ![Glidepath](reports/figuras/09_glidepath.png)
 ![Escenarios de mercado](reports/figuras/10_escenarios_mercado_H.png)
 ![Pensión total](reports/figuras/11_pension_total_H.png)
+![Glidepath óptimo](reports/figuras/12_glidepath_optimo.png)
 
 ---
 
@@ -51,8 +53,8 @@ Todas las cifras se recalculan con `python run_pipeline.py`; esta tabla la **ree
 
 ```bash
 pip install -r requirements.txt       # o: make instalar
-python run_pipeline.py                # o: make pipeline   (~2,5 min con 8 núcleos, todo desde los datos crudos)
-python -m unittest discover -s tests  # o: make pruebas    (27 pruebas, ~20 s)
+python run_pipeline.py                # o: make pipeline   (~3 min con 8 núcleos, todo desde los datos crudos)
+python -m unittest discover -s tests  # o: make pruebas    (29 pruebas, ~20 s)
 ```
 
 Con Docker (mismo resultado en cualquier máquina):
@@ -92,6 +94,7 @@ proyecto-afp/
 │   ├── robustez.py            # 13 supuestos alternativos, comparación camino a camino
 │   ├── incertidumbre.py       # bootstrap: HMM paramétrico, GARCH filtrado, historia por bloques
 │   ├── reforma.py             # pensión total: cotización del empleador, rentabilidad protegida y PGU (Ley 21.735)
+│   ├── optimo.py              # glidepath óptimo por utilidad CRRA (entrenamiento/prueba)
 │   ├── bandas.py              # riesgo de premios y castigos (36 meses móviles)
 │   ├── figuras.py             # gráficos (paleta validada para daltonismo)
 │   └── reporte_excel.py       # reporte maestro + simulador en fórmulas

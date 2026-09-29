@@ -156,3 +156,21 @@ estrategia. Esta sección suma, sobre las mismas trayectorias (supuestos de cons
 
 No se modelan el Beneficio por Años Cotizados (rige para quienes se pensionan hasta ago-2055; el afiliado tipo se
 pensiona en 2061-2066) ni la compensación por expectativa de vida (solo para quienes se pensionan desde los 65).
+
+## 10. Glidepath óptimo (`optimo.py`)
+
+Pregunta: ¿qué tan lejos está el glidepath oficial del mejor posible? Se busca en la familia "meseta y bajada
+lineal" g(edad) = g0 hasta a1, luego lineal hasta g1 al retiro, con g0 ∈ {60%…100%}, a1 ∈ {30…55} y
+g1 ∈ {8%…80%}. Sobre 100% se extrapola por la recta A–E, como en la sección 4.
+
+- **Criterio**: utilidad CRRA de la pensión total mensual, reportada como **equivalente cierto**
+  EC = (E[x^(1−γ)])^(1/(1−γ)). γ = 3 es la base; se prueba también con 2 y 5. Se evalúa con y sin la reforma (PGU incluida).
+- **Sin sobreajuste**: la grilla se recorre sobre 5.000 escenarios de entrenamiento (semilla 101) y el ganador
+  se compara con el oficial y la ley sobre 5.000 escenarios de prueba independientes (semilla 202), con supuestos
+  de consenso 2026.
+- **Lectura**: la superficie es plana cerca del óptimo, así que diferencias de menos de 1% no son relevantes. El
+  resultado robusto es cualitativo: la PGU, que es una renta segura y decreciente en la pensión propia, desplaza el
+  óptimo hacia más riesgo al retiro.
+
+Limitación: es una familia paramétrica, no programación dinámica. El óptimo no reacciona al saldo acumulado ni al
+régimen de mercado, igual que el glidepath oficial, así que la comparación es justa.

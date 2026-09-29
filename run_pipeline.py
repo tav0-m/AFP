@@ -4,6 +4,7 @@
 Uso:  python run_pipeline.py            (≈1 minuto)
 """
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -13,7 +14,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 from afp import (bandas, config, econometria, escenarios, etl_valores_cuota,  # noqa: E402
-                 figuras, incertidumbre, mortalidad, reforma, reporte_excel, retornos, robustez,
+                 figuras, incertidumbre, mortalidad, optimo, reforma, reporte_excel, retornos, robustez,
                  simulacion)
 
 NOMBRES_REGIMEN = {3: ["Calma", "Tasas volátiles (post-2019)", "Crisis bursátil"],
@@ -102,6 +103,12 @@ def main():
     ref_ing = pd.concat([reforma.por_ingreso(R_cons, s).assign(sexo=s) for s in ("H", "M")], ignore_index=True)
     del R_cons
 
+    paso("4b4. Glidepath óptimo (utilidad CRRA de la pensión total, entrenamiento/prueba)")
+    procesos = config.INCERTIDUMBRE.get("procesos") or max(1, (os.cpu_count() or 2) - 1)
+    opt_res, opt_comp = optimo.evaluar(m[config.FONDOS], modelo,
+                                       escenarios.retornos_objetivo(config.ESG["Consenso de mercado 2026"], config.GLIDEPATH),
+                                       procesos=procesos)
+
     paso("4c. Incertidumbre de parámetros (bootstrap del HMM, GARCH e historia)")
     inc = incertidumbre.evaluar(m[config.FONDOS], modelo, habil[config.FONDOS],
                                 desde_quiebre=inicio_quiebre)
@@ -122,6 +129,7 @@ def main():
     figuras.bandas(dev)
     figuras.robustez(rob)
     figuras.glidepath()
+    figuras.glidepath_optimo(opt_res)
     for sexo in ("H", "M"):
         figuras.pilares(ref_ing[ref_ing.sexo == sexo], sexo)
     for sexo in ("H", "M"):
@@ -148,6 +156,7 @@ def main():
     r10 = lambda s: rr.loc[(s, dflt, "Solo 10% del trabajador")]
     rtot = lambda s: rr.loc[(s, dflt, "+ PGU (pensión total)")]
     ri = ref_ing[ref_ing.sexo == "H"]
+    oo = opt_res.set_index(["con_reforma", "gamma"])
     hallazgos = [
         ("La inflación se lleva ~3,9 puntos al año: la rentabilidad real es mucho menor que la publicitada.",
          f"Fondo A: {rent.rent_nominal_anual[0]:.1%} nominal vs {rent.rent_real_anual[0]:.1%} real; "
@@ -207,6 +216,13 @@ def main():
          f"{r10('M').tasa_reemplazo_mediana:.0%} → {rtot('M').tasa_reemplazo_mediana:.0%}. La PGU es progresiva: con sueldo de "
          f"{ri.sueldo_inicial_uf.iloc[0]:.0f} UF la tasa total es {ri.tasa_reemplazo_total.iloc[0]:.0%} y con "
          f"{ri.sueldo_inicial_uf.iloc[-1]:.0f} UF, {ri.tasa_reemplazo_total.iloc[-1]:.0%}."),
+        ("El glidepath oficial está muy cerca del óptimo, y la PGU justifica llegar al retiro con más riesgo.",
+         f"Maximizando la utilidad CRRA de la pensión total (hombre, consenso 2026, escenarios de prueba), el mejor glidepath de la "
+         f"familia supera al oficial en solo {opt_res.optimo_vs_oficial.min():+.1%} a {opt_res.optimo_vs_oficial.max():+.1%} de pensión "
+         f"equivalente cierta (aversión γ de 2 a 5); el fondo por defecto de la ley queda {opt_res.defecto_vs_oficial.min():+.0%} a "
+         f"{opt_res.defecto_vs_oficial.max():+.0%} bajo el oficial. Con γ = 3, el óptimo llega al retiro con "
+         f"{oo.loc[(True, 3.0), 'g1']:.0%} en crecimiento si se cuenta la PGU y {oo.loc[(False, 3.0), 'g1']:.0%} sin ella "
+         f"(el oficial, {simulacion.crecimiento_glidepath(np.array([config.EDAD_LEGAL['H'] - 1]))[0]:.0%}): la PGU actúa como un bono."),
     ]
 
     import re
@@ -235,7 +251,7 @@ def main():
                calidad=calidad, eventos=eventos, rentabilidad=rent, regimenes=reg,
                bic_texto="; ".join(f"K={int(r.K)}: BIC {r.BIC:,.1f}" for r in tabla_bic.itertuples()),
                transicion=modelo["A"], garch=garch, montecarlo=mc, sensibilidad=sens,
-               backtest=pd.concat([b.assign(sexo=s) for s, b in back.items()]), bandas=fb, robustez=rob, esg=esg, reforma=ref_res, reforma_ingreso=ref_ing,
+               backtest=pd.concat([b.assign(sexo=s) for s, b in back.items()]), bandas=fb, robustez=rob, esg=esg, reforma=ref_res, reforma_ingreso=ref_ing, optimo=opt_res,
                incertidumbre=pd.concat([inc["resumen_pensiones"].assign(bloque="Pensiones (historia remuestreada)"),
                                         inc["resumen_hmm"].assign(bloque="HMM (paramétrico)"),
                                         inc["resumen_garch"].assign(bloque="GARCH (residuos filtrados)")], ignore_index=True),
@@ -245,7 +261,8 @@ def main():
     paso("9. Datos procesados y JSON para el simulador web")
     cols = ["fecha", "fondo", "afp", "valor_cuota", "patrimonio", "estado", "uf", "valor_cuota_uf",
             "retorno_ajustado", "retorno_real_ajustado", "n_afiliados"]
-    df[cols].to_csv(config.DATA_PROC / "valores_cuota_afp_real.csv.gz", index=False, float_format="%.6f")
+    df[cols].to_csv(config.DATA_PROC / "valores_cuota_afp_real.csv.gz", index=False, float_format="%.6f",
+                   compression={"method": "gzip", "mtime": 0})   # sin marca de tiempo: salida reproducible
     (100 * (1 + idx_r).cumprod()).to_csv(config.DATA_PROC / "indice_sistema_real_diario.csv", float_format="%.4f")
     m.to_csv(config.DATA_PROC / "retornos_reales_mensuales.csv", float_format="%.6f")
     pd.DataFrame(modelo["gamma"], index=m.index, columns=nombres).to_csv(config.DATA_PROC / "probabilidad_regimenes.csv", float_format="%.4f")
@@ -254,6 +271,8 @@ def main():
     rob.to_csv(config.DATA_PROC / "robustez.csv", index=False, float_format="%.5f")
     esg.to_csv(config.DATA_PROC / "escenarios_mercado.csv", index=False, float_format="%.5f")
     ref_res.to_csv(config.DATA_PROC / "pension_total_capas.csv", index=False, float_format="%.5f")
+    opt_res.to_csv(config.DATA_PROC / "glidepath_optimo.csv", index=False, float_format="%.5f")
+    opt_comp.to_csv(config.DATA_PROC / "glidepath_optimo_comparacion.csv", index=False, float_format="%.5f")
     ref_ing.to_csv(config.DATA_PROC / "pension_total_por_ingreso.csv", index=False, float_format="%.5f")
     for k in ("hmm", "garch", "pensiones"):
         inc[k].to_csv(config.DATA_PROC / f"incertidumbre_{k}.csv", index=False, float_format="%.6f")
@@ -284,6 +303,7 @@ def main():
            "escenarios_mercado": esg.round(4).replace({np.nan: None}).to_dict("records"),
            "reforma": {"capas": ref_res.round(4).to_dict("records"), "ingreso": ref_ing.round(4).to_dict("records"),
                        "pgu": reforma.parametros_uf()},
+           "optimo": opt_res.round(5).to_dict("records"),
            "escenarios_pensiones": esg_pens[["escenario", "estrategia", "sexo", "p5", "p25", "mediana", "p75", "p95"]]
                                    .round(3).to_dict("records"),
            "incertidumbre": inc["pensiones"][["prima_real_A_vs_E", "cv_vs_defecto_mediana",

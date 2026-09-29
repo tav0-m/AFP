@@ -306,3 +306,32 @@ def pilares(tab: pd.DataFrame, sexo="H"):
                             "fondo por defecto, supuestos de mercado de consenso 2026; TR = tasa de reemplazo sobre el último sueldo",
                    f"11_pension_total_{sexo}.png",
                    nota="Fuente: Ley 21.735 (Nota Técnica SPS, ago-2025), SP (PGU feb-2026), BCCh, J.P. Morgan LTCMA 2026. Elaboración propia.")
+
+
+def glidepath_optimo(res: pd.DataFrame, gamma: float = 3.0, sexo: str = "H"):
+    """Glidepath oficial vs óptimos (con y sin PGU) vs ley vigente, en activos de crecimiento."""
+    from . import optimo, simulacion
+    gp = config.GLIDEPATH; retiro = config.EDAD_LEGAL[sexo]
+    edades = np.arange(20, retiro + 1)
+    gm = np.array([gp["crecimiento_multifondos"][f] for f in config.FONDOS])
+    fig, ax = _base()
+    c_cv, c_def = COLOR_ESTRATEGIA["Ciclo de vida (aprox. FG)"], COLOR_ESTRATEGIA["Por defecto (ley)"]
+    ax.plot(edades, simulacion.crecimiento_glidepath(edades) * 100, color=c_cv, lw=2.6)
+    ax.step(edades, simulacion.pesos_defecto(edades, sexo) @ gm * 100, where="post", color=c_def, lw=2)
+    estilos = {True: (COLOR_FONDO["B"], "-"), False: (COLOR_FONDO["B"], (0, (4, 3)))}
+    textos = []
+    for con, (col, ls) in estilos.items():
+        r = res[(res.gamma == gamma) & (res.con_reforma == con) & (res.sexo == sexo)].iloc[0]
+        g = optimo.crecimiento_parametrico(edades, r.g0, r.a1, r.g1, retiro)
+        ax.plot(edades, g * 100, color=col, lw=2, ls=ls)
+        textos.append((edades[-1], g[-1] * 100, f"Óptimo {'con' if con else 'sin'} PGU ({r.optimo_vs_oficial * 100:+.1f}%)", col))
+    textos += [(edades[-1], simulacion.crecimiento_glidepath(edades)[-1] * 100, "Glidepath oficial", c_cv),
+               (edades[-1], (simulacion.pesos_defecto(edades, sexo) @ gm)[-1] * 100, "Ley por defecto", c_def)]
+    for x, y, txt, col in textos:
+        ax.annotate(txt, (x, y), xytext=(8, 0), textcoords="offset points", va="center", fontsize=9, color=col)
+    ax.set_xlim(20, retiro + 12); ax.set_ylim(0, 105)
+    ax.set_xlabel("Edad", color=TXT2); ax.set_ylabel("Activos de crecimiento (%)", color=TXT2)
+    return _cerrar(fig, ax, f"¿Es óptimo el glidepath oficial? Trayectoria que maximiza la utilidad CRRA (γ = {gamma:g}) de la pensión total\n"
+                            "entre paréntesis: equivalente cierto frente al oficial, en escenarios de prueba (consenso 2026)",
+                   "12_glidepath_optimo.png",
+                   nota="Familia: meseta g0 hasta la edad a1 y baja lineal hasta g1 al retiro. Hombre, sueldo 25 UF. Elaboración propia.")

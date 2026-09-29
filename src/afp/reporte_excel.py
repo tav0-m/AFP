@@ -204,6 +204,14 @@ def construir(ruta, r: dict):
                {c: "0.00" for c in ["sueldo_final_uf", "autofinanciada_10", "empleador_cci", "crp", "pgu", "total"]} |
                {"tasa_reemplazo_total": pct, "tasa_reemplazo_10": pct},
                titulo="Progresividad: pensión total mediana por nivel de sueldo (fondo por defecto, consenso 2026)")
+    if "optimo" in r:
+        _tabla(wb, "Glidepath_optimo", r["optimo"],
+               {"g0": pct, "g1": pct, "a1": "0", "ec_oficial": "0.00", "ec_optimo": "0.00", "ec_defecto": "0.00",
+                "optimo_vs_oficial": pct, "defecto_vs_oficial": pct, "gamma": "0.0"},
+               titulo="¿Es óptimo el glidepath oficial? Mejor glidepath de la familia por aversión al riesgo (equivalente cierto, UF)",
+               notas=["Familia: meseta g0 hasta la edad a1 y baja lineal hasta g1 al retiro; réplica con multifondos.",
+                      "Criterio: utilidad CRRA de la pensión total (con_reforma = cotización del empleador, rentabilidad protegida y PGU).",
+                      "Grilla evaluada en escenarios de entrenamiento; resultados reportados en escenarios de prueba independientes."])
     if "incertidumbre" in r:
         t = r["incertidumbre"].reindex(columns=["bloque", "regimen", "fondo", "metrica", "p05", "mediana", "p95"])
         t = t.replace([np.inf, -np.inf], np.nan).astype(object).where(t.notna(), None)

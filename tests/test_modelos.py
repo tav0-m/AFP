@@ -213,6 +213,20 @@ class TestReforma(unittest.TestCase):
         self.assertTrue((pt.empleador_cci > 0).all() and (pt.pgu >= 0).all())
 
 
+class TestOptimo(unittest.TestCase):
+    def test_equivalente_cierto(self):
+        from afp import optimo
+        self.assertAlmostEqual(optimo.equivalente_cierto(np.full(10, 7.0), 3), 7.0)
+        x = np.random.default_rng(1).lognormal(2, 0.4, 5000)
+        ec2, ec5 = optimo.equivalente_cierto(x, 2), optimo.equivalente_cierto(x, 5)
+        self.assertLess(ec5, ec2); self.assertLess(ec2, x.mean())        # más aversión, menor equivalente cierto
+
+    def test_familia_parametrica(self):
+        from afp import optimo
+        g = optimo.crecimiento_parametrico(np.array([25, 40, 52.5, 65]), 0.9, 40, 0.3, 65)
+        np.testing.assert_allclose(g, [0.9, 0.9, 0.6, 0.3])
+
+
 class TestBandas(unittest.TestCase):
     def test_bandas_oficiales_en_config(self):
         from afp import config
