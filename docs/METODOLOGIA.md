@@ -137,3 +137,22 @@ regímenes, volatilidades, colas y correlaciones.
 
 Se supone paridad de poder de compra de largo plazo, es decir, que el retorno real en USD es aproximadamente el
 retorno real en UF. No se descuentan comisiones, porque en Chile se cobran sobre el sueldo y no sobre el saldo.
+
+## 9. Pensión total con la reforma (`reforma.py`, Ley N.º 21.735)
+
+El Monte Carlo base mide la pensión **autofinanciada con el 10% del trabajador**, que es la que depende de la
+estrategia. Esta sección suma, sobre las mismas trayectorias (supuestos de consenso 2026), lo que agrega la reforma:
+
+1. **Cotización del empleador a la cuenta individual**, según la fecha de cada aporte (tabla 1 de la Nota Técnica):
+   0,1% (ago-2025), 0,25% (2027), subiendo 0,7 p.p. al año hasta 4,5% (ago-2033), y 0,15 p.p. al año desde
+   sep-2045 hasta 6% (sep-2054). Para el afiliado tipo promedia ~4,7% del sueldo en su vida laboral. Como la
+   acumulación es lineal en los aportes, se calcula como una capa separable con la misma estrategia y los mismos retornos.
+2. **Cotización con Rentabilidad Protegida** (0,9% en 2026, 1,5% desde 2027 y bajando desde 2045 hasta 0% en 2054):
+   bono en UF que devenga la tasa de los bonos de Tesorería en UF (2,52% real). Al pensionarse se paga en 240 cuotas
+   a la cuenta individual, así que en valor presente se suma al saldo al retiro.
+3. **PGU**: $250.275 (feb-2026; UF de referencia 39.703,50) desde los 65 años. Es completa si la pensión base (capas
+   1 a 3) es menor que la pensión inferior ($789.139) y decrece linealmente hasta cero en la pensión superior
+   ($1.252.602). Se supone que la persona cumple la focalización.
+
+No se modelan el Beneficio por Años Cotizados (rige para quienes se pensionan hasta ago-2055; el afiliado tipo se
+pensiona en 2061-2066) ni la compensación por expectativa de vida (solo para quienes se pensionan desde los 65).

@@ -1,4 +1,9 @@
 # De multifondos a fondos generacionales
+
+[![ci](https://github.com/tav0-m/AFP/actions/workflows/ci.yml/badge.svg)](https://github.com/tav0-m/AFP/actions/workflows/ci.yml)
+[![pages](https://github.com/tav0-m/AFP/actions/workflows/pages.yml/badge.svg)](https://tav0-m.github.io/AFP/)
+
+**Tablero de resultados:** [tav0-m.github.io/AFP](https://tav0-m.github.io/AFP/) · **Simulador personal:** [tav0-m.github.io/AFP/simulador.html](https://tav0-m.github.io/AFP/simulador.html)
 ### Riesgo, regímenes de mercado y pensiones en Chile (2002–2026)
 
 El 1 de abril de 2027 los cinco multifondos (A–E) serán reemplazados por diez **fondos generacionales**
@@ -26,6 +31,7 @@ Este proyecto usa 24 años de datos oficiales para responder tres preguntas:
 | 8 | Las dos conclusiones sobre estrategias resisten 13 supuestos alternativos, y reaccionar más rápido cuesta más. | El ciclo de vida supera al por defecto en 91%–93% de los escenarios en todos los casos (mediana +28% a +51%). La regla reactiva pierde en la mediana en los 13 casos: -9,7% si reacciona ante caídas de 4% (≈26 traspasos) y -0,9% si espera caídas de 10%. |
 | 9 | La ventaja del ciclo de vida es, en el fondo, una apuesta a la prima de la renta variable, y 24 años de historia no la aseguran. | Remuestreando la historia por bloques (200 historias), la prima real del A sobre el E va de -2,0% a +7,2% (IC 90%) y explica la ventaja del ciclo de vida (correlación 0,94). El ciclo de vida gana en la mediana en 86% de las historias; cuando la prima es negativa, pierde. |
 | 10 | Con las expectativas de mercado actuales, la ventaja del ciclo de vida es real pero mucho menor que la histórica. | Recentrando los escenarios en el consenso 2026 (renta fija UF 2,52%, renta variable global 4,4% real): Fondo A 4,1% y E 2,7% real/año; ciclo de vida vs por defecto +12% en la mediana (vs +46% con la historia), percentil 5 -2%, gana en 68% de los escenarios. Sin prima de crecimiento: -1%. La probabilidad de alcanzar una tasa de reemplazo de 40% es 10% (por defecto) y 25% (ciclo de vida). |
+| 11 | La reforma de 2025 cambia más la pensión que cualquier estrategia de inversión: la tasa de reemplazo se duplica. | Fondo por defecto, consenso 2026. Hombre: solo con el 10% del trabajador, tasa de reemplazo mediana 27% (10% llega a 40%); con cotización del empleador, rentabilidad protegida y PGU, 58% (98% llega a 40%). Mujer (PGU desde los 65): 17% → 43%. La PGU es progresiva: con sueldo de 15 UF la tasa total es 69% y con 60 UF, 40%. |
 <!-- HALLAZGOS:FIN -->
 
 Todas las cifras se recalculan con `python run_pipeline.py`; esta tabla la **reescribe el pipeline** desde los datos.
@@ -37,6 +43,7 @@ Todas las cifras se recalculan con `python run_pipeline.py`; esta tabla la **ree
 ![Incertidumbre](reports/figuras/08_incertidumbre.png)
 ![Glidepath](reports/figuras/09_glidepath.png)
 ![Escenarios de mercado](reports/figuras/10_escenarios_mercado_H.png)
+![Pensión total](reports/figuras/11_pension_total_H.png)
 
 ---
 
@@ -45,7 +52,7 @@ Todas las cifras se recalculan con `python run_pipeline.py`; esta tabla la **ree
 ```bash
 pip install -r requirements.txt       # o: make instalar
 python run_pipeline.py                # o: make pipeline   (~2,5 min con 8 núcleos, todo desde los datos crudos)
-python -m unittest discover -s tests  # o: make pruebas    (23 pruebas, ~20 s)
+python -m unittest discover -s tests  # o: make pruebas    (27 pruebas, ~20 s)
 ```
 
 Con Docker (mismo resultado en cualquier máquina):
@@ -84,6 +91,7 @@ proyecto-afp/
 │   ├── simulacion.py          # etapa 4: vida laboral y estrategias
 │   ├── robustez.py            # 13 supuestos alternativos, comparación camino a camino
 │   ├── incertidumbre.py       # bootstrap: HMM paramétrico, GARCH filtrado, historia por bloques
+│   ├── reforma.py             # pensión total: cotización del empleador, rentabilidad protegida y PGU (Ley 21.735)
 │   ├── bandas.py              # riesgo de premios y castigos (36 meses móviles)
 │   ├── figuras.py             # gráficos (paleta validada para daltonismo)
 │   └── reporte_excel.py       # reporte maestro + simulador en fórmulas
@@ -125,8 +133,9 @@ proyecto-afp/
 - 40 años de escenarios se construyen desde 24 años de historia. Por eso se reportan también los escenarios de consenso
   (hallazgo 10) y el bootstrap de la historia (hallazgo 9): la conclusión robusta es el **signo** de la ventaja del
   ciclo de vida, no su tamaño.
-- La pensión es la autofinanciada por retiro programado: sin PGU, sin beneficiarios de sobrevivencia,
-  cotización 10% y densidad 60% (parámetros en `config.py`).
+- El Monte Carlo base mide la pensión autofinanciada con el 10% del trabajador (lo que depende de la estrategia);
+  la pensión total con la reforma y la PGU se calcula aparte (hallazgo 11). Sin beneficiarios de sobrevivencia;
+  densidad de cotización 60% (parámetros en `config.py`).
 
 Ver `docs/ROADMAP.md` para el plan de escalamiento.
 

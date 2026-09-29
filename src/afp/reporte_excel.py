@@ -190,6 +190,20 @@ def construir(ruta, r: dict):
                       "Consenso 2026: protección 2,52% real (bono en UF a 10 años, BCCh); crecimiento 4,4% real (MSCI ACWI, J.P. Morgan LTCMA 2026).",
                       "Se conservan regímenes, volatilidades, colas y correlaciones históricas: solo cambia el retorno esperado."],
                anchos=[28, 6, 14, 14, 16, 14, 16, 18, 14, 12, 14, 12])
+    if "reforma" in r:
+        _tabla(wb, "Pension_total", r["reforma"].reindex(columns=["sexo", "estrategia", "capa", "p5", "mediana", "p95",
+                                                                 "tasa_reemplazo_mediana", "prob_tr_meta"]),
+               {"p5": "0.00", "mediana": "0.00", "p95": "0.00", "tasa_reemplazo_mediana": pct, "prob_tr_meta": pct},
+               titulo="Pensión total con la reforma (Ley 21.735): capas acumuladas, supuestos de consenso 2026 (UF de hoy)",
+               notas=["Capas: 10% del trabajador; + cotización del empleador a la cuenta individual (0,1% → 6% según fecha); "
+                      "+ Cotización con Rentabilidad Protegida (bono a 2,52% real); + PGU ($250.275 feb-2026, focalizada por pensión base).",
+                      "Mujer: se pensiona a los 60 y recibe la PGU desde los 65. Supone que cumple la focalización (no es del 10% más rico).",
+                      "Tasa de reemplazo = pensión / último sueldo imponible. Meta: 40%."],
+               anchos=[6, 26, 28, 10, 10, 10, 14, 14])
+        _tabla(wb, "Pension_por_ingreso", r["reforma_ingreso"],
+               {c: "0.00" for c in ["sueldo_final_uf", "autofinanciada_10", "empleador_cci", "crp", "pgu", "total"]} |
+               {"tasa_reemplazo_total": pct, "tasa_reemplazo_10": pct},
+               titulo="Progresividad: pensión total mediana por nivel de sueldo (fondo por defecto, consenso 2026)")
     if "incertidumbre" in r:
         t = r["incertidumbre"].reindex(columns=["bloque", "regimen", "fondo", "metrica", "p05", "mediana", "p95"])
         t = t.replace([np.inf, -np.inf], np.nan).astype(object).where(t.notna(), None)

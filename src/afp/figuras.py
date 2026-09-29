@@ -279,3 +279,30 @@ def escenarios_mercado(tab: pd.DataFrame, sexo="H"):
                             "mismos regímenes, volatilidades y colas históricas; solo cambia el retorno esperado",
                    f"10_escenarios_mercado_{sexo}.png",
                    nota="Fuente: SP, BCCh (bono en UF a 10 años, 2,52%), J.P. Morgan LTCMA 2026 (MSCI ACWI 7,0% USD). Elaboración propia.")
+
+
+def pilares(tab: pd.DataFrame, sexo="H"):
+    """Pensión total por nivel de sueldo, apilada por capa (mediana): progresividad de la reforma."""
+    capas = (("autofinanciada_10", "Cotización del trabajador (10%)", COLOR_FONDO["A"]),
+             ("empleador_cci", "Cotización del empleador", COLOR_FONDO["C"]),
+             ("crp", "Rentabilidad protegida", COLOR_FONDO["D"]),
+             ("pgu", "PGU", COLOR_ESTRATEGIA["Ciclo de vida (aprox. FG)"]))
+    fig, ax = _base()
+    ax.set_axisbelow(True)
+    x = np.arange(len(tab)); base = np.zeros(len(tab))
+    for col, nombre, color in capas:
+        ax.bar(x, tab[col], bottom=base, width=0.56, color=color, edgecolor=SUP, linewidth=2, label=nombre)
+        base += tab[col].values
+    for i, r in enumerate(tab.itertuples()):
+        ax.annotate(f"{es(r.total)} UF · TR {r.tasa_reemplazo_total * 100:.0f}%", (i, r.total), xytext=(0, 6),
+                    textcoords="offset points", ha="center", fontsize=9.5, color=TXT)
+    ax.set_xticks(x); ax.set_xticklabels([f"Sueldo {es(s, 0)} UF\n(final {es(f, 0)} UF)" for s, f in
+                                          zip(tab.sueldo_inicial_uf, tab.sueldo_final_uf)], color=TXT)
+    ax.set_ylabel("Pensión mensual (UF de hoy), mediana", color=TXT2)
+    ax.set_ylim(0, tab.total.max() * 1.15)
+    ax.legend(frameon=False, loc="upper left", fontsize=9, labelcolor=TXT, ncol=2)
+    quien = "hombre, 25 a 65" if sexo == "H" else "mujer, 25 a 60 (PGU desde los 65)"
+    return _cerrar(fig, ax, f"Pensión total con la reforma (Ley 21.735) según el sueldo · {quien}\n"
+                            "fondo por defecto, supuestos de mercado de consenso 2026; TR = tasa de reemplazo sobre el último sueldo",
+                   f"11_pension_total_{sexo}.png",
+                   nota="Fuente: Ley 21.735 (Nota Técnica SPS, ago-2025), SP (PGU feb-2026), BCCh, J.P. Morgan LTCMA 2026. Elaboración propia.")

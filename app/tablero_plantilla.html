@@ -114,12 +114,12 @@ footer{margin-top:48px; padding-top:20px; border-top:1px solid var(--borde); dis
 
   <nav class="secciones" aria-label="Secciones">
     <a href="#hallazgos">Hallazgos</a><a href="#mercado">Mercado 2002–2026</a><a href="#glidepath">Glidepath oficial</a>
-    <a href="#estrategias">Pensión por estrategia</a><a href="#supuestos">Supuestos de mercado</a>
+    <a href="#estrategias">Pensión por estrategia</a><a href="#supuestos">Supuestos de mercado</a><a href="#reforma">Pensión total</a>
     <a href="#incertidumbre">Incertidumbre</a><a href="#robustez">Robustez</a><a href="#bandas">Premios y castigos</a>
   </nav>
 
   <section id="hallazgos">
-    <h2>Diez hallazgos, calculados desde los datos</h2>
+    <h2>Hallazgos, calculados desde los datos</h2>
     <ol class="hallazgos" id="lista-hallazgos"></ol>
   </section>
 
@@ -173,6 +173,22 @@ footer{margin-top:48px; padding-top:20px; border-top:1px solid var(--borde); dis
       <div class="grafico" id="g-esg"></div>
       <details><summary>Ver tabla</summary><div class="tabla" id="t-esg"></div></details>
       <p class="nota">Mismos regímenes, volatilidades y colas históricas; solo cambia el retorno esperado. Consenso 2026: bono en UF a 10 años 2,52% (BCCh) y MSCI ACWI 7,0% USD con inflación 2,5% (J.P. Morgan LTCMA 2026).</p>
+    </div>
+  </section>
+
+  <section id="reforma">
+    <h2>La reforma de 2025 pesa más que la estrategia de inversión</h2>
+    <p class="lectura" id="lectura-reforma"></p>
+    <div class="lienzo">
+      <div class="barra">
+        <div class="leyenda"><span><i class="caja" style="background:var(--fA)"></i>Trabajador (10%)</span><span><i class="caja" style="background:var(--fC)"></i>Empleador</span><span><i class="caja" style="background:var(--fD)"></i>Rentabilidad protegida</span><span><i class="caja" style="background:var(--sCV)"></i>PGU</span></div>
+        <div class="segmentado" role="group" aria-label="Sexo">
+          <button type="button" id="ref-H" aria-pressed="true">Hombre</button><button type="button" id="ref-M" aria-pressed="false">Mujer</button>
+        </div>
+      </div>
+      <div class="grafico" id="g-reforma"></div>
+      <details><summary>Ver tabla por capa</summary><div class="tabla" id="t-reforma"></div></details>
+      <p class="nota">Mediana con el fondo por defecto y supuestos de consenso 2026, en UF de hoy. Ley 21.735: cotización del empleador a la cuenta individual de 0,1% a 6% según la fecha, cotización con rentabilidad protegida (bono a 2,52% real) y PGU de $250.275 focalizada. La mujer recibe la PGU desde los 65.</p>
     </div>
   </section>
 
@@ -251,12 +267,13 @@ const esgH = D.escenarios_mercado.filter(r => r.sexo === "H");
 const esgBy = n => esgH.find(r => r.escenario === n);
 const hist = esgBy("Histórico 2002-2026"), cons = esgBy("Consenso de mercado 2026");
 const mcH = D.montecarlo.H, mcM = D.montecarlo.M, med = (t,e) => t.find(r => r.estrategia === e).mediana;
+const RF = (s, capa, e="Por defecto (ley)") => D.reforma.capas.find(r => r.sexo === s && r.capa === capa && r.estrategia === e);
 const inc = D.incertidumbre, gana = inc.cv_vs_defecto_mediana.filter(v => v > 0).length / inc.cv_vs_defecto_mediana.length;
 $("cifras").innerHTML = [
   [pctS(hist.cv_vs_defecto_mediana), "pensión mediana del ciclo de vida vs fondo por defecto, si se repite la historia"],
   [pctS(cons.cv_vs_defecto_mediana), "la misma ventaja con los supuestos de mercado de consenso 2026"],
   [pct(gana), "de las historias alternativas en que el ciclo de vida gana"],
-  [pct(cons.prob_tr_meta_defecto) + ` <small>/ ${pct(cons.prob_tr_meta_cv)}</small>`, "probabilidad de una tasa de reemplazo de 40% (por defecto / ciclo de vida, consenso)"],
+  [pct(RF("H","+ PGU (pensión total)").tasa_reemplazo_mediana) + ` <small>vs ${pct(RF("H","Solo 10% del trabajador").tasa_reemplazo_mediana)}</small>`, "tasa de reemplazo mediana con la reforma y la PGU, frente a solo el 10% del trabajador (hombre, consenso)"],
 ].map(([v,r]) => `<div class="cifra"><span class="valor num">${v}</span><span class="rotulo">${r}</span></div>`).join("");
 
 $("lista-hallazgos").innerHTML = D.hallazgos.map(h => `<li><b>${h.titulo}</b><p>${h.detalle}</p></li>`).join("");
@@ -372,6 +389,36 @@ $("lectura-esg").textContent = `El fondo por defecto casi no cambia entre escena
   `con la historia gana ${pctS(hist.cv_vs_defecto_mediana)}, con el consenso 2026 (Fondo A ${pct(cons.retorno_real_A,1)} y E ${pct(cons.retorno_real_E,1)} real al año) gana ${pctS(cons.cv_vs_defecto_mediana)}, ` +
   `y su peor 5% queda ${pctS(cons.cv_vs_defecto_p5)} frente al por defecto.`;
 
+/* ---------- 3b. pensión total con la reforma ---------- */
+let sexoRef = "H";
+const CAPAS = [["autofinanciada_10","Trabajador (10%)","--fA"],["empleador_cci","Empleador","--fC"],["crp","Rentabilidad protegida","--fD"],["pgu","PGU","--sCV"]];
+function gReforma(){
+  const T = D.reforma.ingreso.filter(r => r.sexo === sexoRef), alto = 330, [s, w] = lienzo("g-reforma", alto), m = {l:44, r:12, t:30, b:44};
+  const ymax = Math.max(...T.map(r => r.total)) * 1.12, y = lin(0, ymax, alto-m.b, m.t), banda = (w-m.l-m.r)/T.length, bw = Math.min(banda*0.56, 120);
+  ejeY(s, y, ticks(0, ymax, 5), m.l, w-m.r, v => nf(v,0));
+  el("text", {x:m.l, y:14}, s).textContent = "UF/mes";
+  T.forEach((r, i) => { const cx = m.l + banda*(i+.5); let acum = 0;
+    for (const [k, nom, c] of CAPAS){ const v = r[k]; if (v <= 0) continue;
+      const rect = el("rect", {x:cx-bw/2, y:y(acum+v), width:bw, height:Math.max(y(acum)-y(acum+v)-2, 0.5), rx:2, style:`fill:var(${c})`, class:"marca"}, s);
+      acum += v;
+      rect.addEventListener("pointermove", ev => tip(ev, `<div class="t">Sueldo inicial ${nf(r.sueldo_inicial_uf,0)} UF</div>` +
+        CAPAS.map(([kk, nn, cc]) => fila(cc, nn, nf(r[kk],1) + " UF")).join("") + fila(null, "Total", nf(r.total,1) + " UF") +
+        fila(null, "Tasa de reemplazo", `${pct(r.tasa_reemplazo_10)} → ${pct(r.tasa_reemplazo_total)}`)));
+      rect.addEventListener("pointerleave", ocultar); }
+    el("text", {x:cx, y:y(r.total)-8, "text-anchor":"middle", class:"fuerte"}, s).textContent = `${nf(r.total,1)} UF · ${pct(r.tasa_reemplazo_total)}`;
+    el("text", {x:cx, y:alto-m.b+16, "text-anchor":"middle"}, s).textContent = `Sueldo ${nf(r.sueldo_inicial_uf,0)} UF`;
+    el("text", {x:cx, y:alto-m.b+31, "text-anchor":"middle", style:"fill:var(--muda)"}, s).textContent = `(final ${nf(r.sueldo_final_uf,0)} UF)`; });
+  const C = D.reforma.capas.filter(r => r.sexo === sexoRef);
+  tabla("t-reforma", ["Estrategia","Capa","Mediana (UF)","P5","P95","Tasa de reemplazo","Prob. TR ≥ 40%"],
+    C.map(r => [nombreEstr(r.estrategia), r.capa, nf(r.mediana,1), nf(r.p5,1), nf(r.p95,1), pct(r.tasa_reemplazo_mediana), pct(r.prob_tr_meta)]));
+  const a = RF(sexoRef,"Solo 10% del trabajador"), b = RF(sexoRef,"+ PGU (pensión total)");
+  const cvT = RF(sexoRef,"+ PGU (pensión total)","Ciclo de vida (aprox. FG)");
+  $("lectura-reforma").textContent = `${sexoRef === "H" ? "Un hombre" : "Una mujer"} con sueldo inicial de 25 UF en el fondo por defecto pasa de una tasa de reemplazo de ${pct(a.tasa_reemplazo_mediana)} ` +
+    `con solo su 10% a ${pct(b.tasa_reemplazo_mediana)} con la reforma completa, y la probabilidad de superar 40% sube de ${pct(a.prob_tr_meta)} a ${pct(b.prob_tr_meta)}. ` +
+    `Con el ciclo de vida, la pensión total mediana es ${pctS(cvT.mediana/b.mediana-1)} mayor: la PGU amortigua la diferencia entre estrategias.`;
+}
+$("ref-H").onclick = () => { sexoRef = "H"; alternar("ref","H",gReforma); }; $("ref-M").onclick = () => { sexoRef = "M"; alternar("ref","M",gReforma); };
+
 /* ---------- 4. incertidumbre ---------- */
 function gInc(){
   const alto = 380, [s, w] = lienzo("g-inc", alto), m = {l:52, r:16, t:14, b:40};
@@ -442,7 +489,7 @@ function gBandas(){
 function alternar(pref, valor, fn){ for (const k of ["H","M"]) $(`${pref}-${k}`).setAttribute("aria-pressed", String(k === valor)); fn(); }
 $("mc-H").onclick = () => { sexoMC = "H"; alternar("mc","H",gMC); }; $("mc-M").onclick = () => { sexoMC = "M"; alternar("mc","M",gMC); };
 $("esg-H").onclick = () => { sexoESG = "H"; alternar("esg","H",gESG); }; $("esg-M").onclick = () => { sexoESG = "M"; alternar("esg","M",gESG); };
-const todo = () => { gMercado(); gGlide(); gMC(); gESG(); gInc(); gRob(); gBandas(); };
+const todo = () => { gMercado(); gGlide(); gMC(); gESG(); gReforma(); gInc(); gRob(); gBandas(); };
 todo(); let t0; addEventListener("resize", () => { clearTimeout(t0); t0 = setTimeout(todo, 150); });
 })();
 </script>

@@ -13,7 +13,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 from afp import (bandas, config, econometria, escenarios, etl_valores_cuota,  # noqa: E402
-                 figuras, incertidumbre, mortalidad, reporte_excel, retornos, robustez,
+                 figuras, incertidumbre, mortalidad, reforma, reporte_excel, retornos, robustez,
                  simulacion)
 
 NOMBRES_REGIMEN = {3: ["Calma", "Tasas volátiles (post-2019)", "Crisis bursátil"],
@@ -94,6 +94,14 @@ def main():
     paso("4b2. Escenarios de mercado forward-looking (histórico vs consenso 2026 vs prima nula)")
     esg, esg_pens = robustez.evaluar_esg(m, modelo)
 
+    paso("4b3. Pensión total con la reforma (Ley 21.735), supuestos de consenso")
+    R_cons = escenarios.simular(m[config.FONDOS], modelo, meses=480, n=p["n_simulaciones"], semilla=p["semilla"],
+                                objetivo=escenarios.retornos_objetivo(config.ESG["Consenso de mercado 2026"], config.GLIDEPATH))
+    pt = {s: reforma.pension_total(R_cons, s) for s in ("H", "M")}
+    ref_res = pd.concat([reforma.resumen(pt[s]).assign(sexo=s) for s in ("H", "M")], ignore_index=True)
+    ref_ing = pd.concat([reforma.por_ingreso(R_cons, s).assign(sexo=s) for s in ("H", "M")], ignore_index=True)
+    del R_cons
+
     paso("4c. Incertidumbre de parámetros (bootstrap del HMM, GARCH e historia)")
     inc = incertidumbre.evaluar(m[config.FONDOS], modelo, habil[config.FONDOS],
                                 desde_quiebre=inicio_quiebre)
@@ -115,6 +123,8 @@ def main():
     figuras.robustez(rob)
     figuras.glidepath()
     for sexo in ("H", "M"):
+        figuras.pilares(ref_ing[ref_ing.sexo == sexo], sexo)
+    for sexo in ("H", "M"):
         figuras.escenarios_mercado(esg_pens, sexo)
     figuras.incertidumbre(inc["pensiones"], mc["H"].set_index("estrategia").pipe(
         lambda t: t.loc["Ciclo de vida (aprox. FG)", "mediana"] / t.loc["Por defecto (ley)", "mediana"] - 1))
@@ -134,6 +144,10 @@ def main():
     ci_ce = incertidumbre.ic_correlacion(corr_ce.iloc[-1], 36)
     eg = esg[esg.sexo == "H"].set_index("escenario")
     cons, nula = eg.loc["Consenso de mercado 2026"], eg.loc["Prima de crecimiento nula"]
+    rr = ref_res.set_index(["sexo", "estrategia", "capa"])
+    r10 = lambda s: rr.loc[(s, dflt, "Solo 10% del trabajador")]
+    rtot = lambda s: rr.loc[(s, dflt, "+ PGU (pensión total)")]
+    ri = ref_ing[ref_ing.sexo == "H"]
     hallazgos = [
         ("La inflación se lleva ~3,9 puntos al año: la rentabilidad real es mucho menor que la publicitada.",
          f"Fondo A: {rent.rent_nominal_anual[0]:.1%} nominal vs {rent.rent_real_anual[0]:.1%} real; "
@@ -186,6 +200,13 @@ def main():
          f"gana en {cons.prob_cv_supera_defecto:.0%} de los escenarios. Sin prima de crecimiento: {nula.cv_vs_defecto_mediana:+.0%}. "
          f"La probabilidad de alcanzar una tasa de reemplazo de 40% es {cons.prob_tr_meta_defecto:.0%} (por defecto) y "
          f"{cons.prob_tr_meta_cv:.0%} (ciclo de vida)."),
+        ("La reforma de 2025 cambia más la pensión que cualquier estrategia de inversión: la tasa de reemplazo se duplica.",
+         f"Fondo por defecto, consenso 2026. Hombre: solo con el 10% del trabajador, tasa de reemplazo mediana {r10('H').tasa_reemplazo_mediana:.0%} "
+         f"({r10('H').prob_tr_meta:.0%} llega a 40%); con cotización del empleador, rentabilidad protegida y PGU, "
+         f"{rtot('H').tasa_reemplazo_mediana:.0%} ({rtot('H').prob_tr_meta:.0%} llega a 40%). Mujer (PGU desde los 65): "
+         f"{r10('M').tasa_reemplazo_mediana:.0%} → {rtot('M').tasa_reemplazo_mediana:.0%}. La PGU es progresiva: con sueldo de "
+         f"{ri.sueldo_inicial_uf.iloc[0]:.0f} UF la tasa total es {ri.tasa_reemplazo_total.iloc[0]:.0%} y con "
+         f"{ri.sueldo_inicial_uf.iloc[-1]:.0f} UF, {ri.tasa_reemplazo_total.iloc[-1]:.0%}."),
     ]
 
     import re
@@ -206,13 +227,15 @@ def main():
         "Renta fija en UF: tasa de bonos BCU/BTU a 10 años, mercado secundario, 2,52% (BCCh, 08-06-2026).",
         "Renta variable global: MSCI ACWI 7,0% nominal USD e inflación EE.UU. 2,5% (J.P. Morgan AM, Long-Term Capital "
         "Market Assumptions 2026).",
+        "Reforma de pensiones: Ley N.º 21.735; Subsecretaría de Previsión Social, Nota Técnica (ago-2025), tablas 1, 3 y 5. "
+        "PGU y umbrales de pensión base: SP (vigentes desde el 01-02-2026).",
     ]
     res = dict(rango_datos=f"{vc.fecha.min():%d-%m-%Y} a {vc.fecha.max():%d-%m-%Y}", hallazgos=hallazgos,
                uf_ultima=float(uf.uf.iloc[-1]), uf_fecha=f"{uf.fecha.iloc[-1]:%d-%m-%Y}",
                calidad=calidad, eventos=eventos, rentabilidad=rent, regimenes=reg,
                bic_texto="; ".join(f"K={int(r.K)}: BIC {r.BIC:,.1f}" for r in tabla_bic.itertuples()),
                transicion=modelo["A"], garch=garch, montecarlo=mc, sensibilidad=sens,
-               backtest=pd.concat([b.assign(sexo=s) for s, b in back.items()]), bandas=fb, robustez=rob, esg=esg,
+               backtest=pd.concat([b.assign(sexo=s) for s, b in back.items()]), bandas=fb, robustez=rob, esg=esg, reforma=ref_res, reforma_ingreso=ref_ing,
                incertidumbre=pd.concat([inc["resumen_pensiones"].assign(bloque="Pensiones (historia remuestreada)"),
                                         inc["resumen_hmm"].assign(bloque="HMM (paramétrico)"),
                                         inc["resumen_garch"].assign(bloque="GARCH (residuos filtrados)")], ignore_index=True),
@@ -230,6 +253,8 @@ def main():
         mc[sexo].to_csv(config.DATA_PROC / f"montecarlo_{sexo}.csv", index=False, float_format="%.4f")
     rob.to_csv(config.DATA_PROC / "robustez.csv", index=False, float_format="%.5f")
     esg.to_csv(config.DATA_PROC / "escenarios_mercado.csv", index=False, float_format="%.5f")
+    ref_res.to_csv(config.DATA_PROC / "pension_total_capas.csv", index=False, float_format="%.5f")
+    ref_ing.to_csv(config.DATA_PROC / "pension_total_por_ingreso.csv", index=False, float_format="%.5f")
     for k in ("hmm", "garch", "pensiones"):
         inc[k].to_csv(config.DATA_PROC / f"incertidumbre_{k}.csv", index=False, float_format="%.6f")
     dev.assign(mes=dev.mes.astype(str)).to_csv(config.DATA_PROC / "desviaciones_36m_afp.csv", index=False, float_format="%.6f")
@@ -257,6 +282,8 @@ def main():
                       "hist": np.histogram(dev.desviacion * 100, bins=np.arange(-4.5, 4.55, 0.1))[0].tolist()},
            "robustez": rob.round(4).to_dict("records"),
            "escenarios_mercado": esg.round(4).replace({np.nan: None}).to_dict("records"),
+           "reforma": {"capas": ref_res.round(4).to_dict("records"), "ingreso": ref_ing.round(4).to_dict("records"),
+                       "pgu": reforma.parametros_uf()},
            "escenarios_pensiones": esg_pens[["escenario", "estrategia", "sexo", "p5", "p25", "mediana", "p75", "p95"]]
                                    .round(3).to_dict("records"),
            "incertidumbre": inc["pensiones"][["prima_real_A_vs_E", "cv_vs_defecto_mediana",

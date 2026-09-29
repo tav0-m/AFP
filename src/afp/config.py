@@ -81,6 +81,29 @@ ESG = {
     "Prima de crecimiento nula": {"real_crecimiento": 0.0252, "real_proteccion": 0.0252},
 }
 
+# Reforma de pensiones, Ley N.º 21.735 (Subsecretaría de Previsión Social, Nota Técnica, ago-2025, tablas 1, 3 y 5).
+# Tasas por fecha de vigencia (año, mes). Se usan en el análisis "pensión total", no en el Monte Carlo base.
+# * empleador_cci: cotización del empleador a la cuenta individual (0,1% -> 4,5% en 2033 -> 6% en 2054).
+# * crp: Cotización con Rentabilidad Protegida (bono de seguridad previsional en UF que devenga la tasa de los
+#   bonos de Tesorería en UF; al pensionarse se paga en 240 cuotas a la cuenta individual). Se valora a
+#   tasa_crp_real y se suma al saldo al retiro (equivalencia en valor presente).
+# * PGU (Ley 21.419 modificada): $250.275 desde los 65 años (valor feb-2026, reajuste IPC); completa si la
+#   pensión base <= pensión inferior y decrece linealmente hasta cero en la pensión superior. Supone que la
+#   persona cumple el requisito de focalización (no pertenece al 10% más rico).
+# * El Beneficio por Años Cotizados rige solo para quienes se pensionan hasta ago-2055: no aplica al afiliado tipo
+#   (se pensiona en 2061-2066). La compensación por expectativa de vida aplica desde los 65: no se modela.
+REFORMA = {
+    "empleador_cci": [((2025, 8), 0.001), ((2027, 8), 0.0025), ((2028, 8), 0.010), ((2029, 8), 0.017),
+                      ((2030, 8), 0.024), ((2031, 8), 0.031), ((2032, 8), 0.038), ((2033, 8), 0.045)]
+                     + [((2045 + k, 9), 0.045 + 0.0015 * (k + 1)) for k in range(10)],
+    "crp": [((2026, 8), 0.009), ((2027, 8), 0.015)]
+           + [((2045 + k, 9), round(0.015 - 0.0015 * (k + 1), 4)) for k in range(10)],
+    "tasa_crp_real": 0.0252,
+    "pgu_pesos": 250_275, "pension_inferior_pesos": 789_139, "pension_superior_pesos": 1_252_602,
+    "uf_referencia": 39_703.50, "fecha_uf_referencia": "2026-02-01", "edad_pgu": 65,
+    "sueldos_uf": [15, 25, 40, 60],       # perfiles de ingreso para la figura de pilares
+}
+
 # Incertidumbre de parámetros (bootstrap). IC de 90% = percentiles 5-95 de las réplicas.
 # bloque_medio: largo medio (meses) de los bloques del bootstrap estacionario de la historia.
 INCERTIDUMBRE = {"B_hmm": 200, "B_garch": 100, "B_pensiones": 200, "n_escenarios": 2000,

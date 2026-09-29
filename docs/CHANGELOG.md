@@ -1,5 +1,14 @@
 # Registro de cambios
 
+## 2026-09-29 (noche)
+- Repositorio publicado en GitHub (`tav0-m/AFP`); `.gitattributes` normaliza los finales de línea (LF).
+- **Pensión total con la reforma** (hoja de ruta 1.4): nuevo `reforma.py` (Ley 21.735: cotización del empleador por
+  fecha, Cotización con Rentabilidad Protegida y PGU focalizada). Hallazgo 11; figura 11 (pilares por nivel de sueldo);
+  hojas Excel `Pension_total` y `Pension_por_ingreso`; sección en el tablero. La tasa de reemplazo mediana del hombre
+  pasa de 27% a 58% con la reforma completa.
+- Workflow `pages.yml`: publica el tablero y el simulador en GitHub Pages en cada cambio de `app/`.
+- Pruebas: 27 (calendarios de cotización, extinción de la CRP, focalización de la PGU, capas que suman el total).
+
 ## 2026-09-29 (tarde)
 - **Escenarios forward-looking** (hoja de ruta 2.1): `escenarios.simular(objetivo=...)` recentra cada fondo en un retorno
   esperado calibrado sobre la media simulada. `config.ESG` define histórico, consenso 2026 (BCCh + J.P. Morgan LTCMA)

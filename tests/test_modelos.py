@@ -187,6 +187,32 @@ class TestIncertidumbre(unittest.TestCase):
         self.assertLess(lo, 0.81); self.assertGreater(hi, 0.81); self.assertLess(hi, 1)
 
 
+class TestReforma(unittest.TestCase):
+    def setUp(self):
+        from afp import reforma, config
+        self.rf, self.cfg = reforma, config
+
+    def test_calendario_cotizacion_empleador(self):
+        cal = self.cfg.REFORMA["empleador_cci"]
+        f = np.array([2025.0, 2025 + 7 / 12, 2030.0, 2033 + 7 / 12, 2040.0, 2054 + 8 / 12, 2070.0])
+        np.testing.assert_allclose(self.rf.tasa_vigente(cal, f), [0, 0.001, 0.017, 0.045, 0.045, 0.06, 0.06])
+
+    def test_crp_se_extingue_en_2054(self):
+        cal = self.cfg.REFORMA["crp"]
+        np.testing.assert_allclose(self.rf.tasa_vigente(cal, np.array([2030.0, 2050.0, 2060.0])), [0.015, 0.0075, 0.0])
+
+    def test_pgu_focalizada(self):
+        u = self.rf.parametros_uf()
+        v = self.rf.pgu(np.array([0.0, u["inferior"], (u["inferior"] + u["superior"]) / 2, u["superior"], 99]))
+        np.testing.assert_allclose(v, [u["pgu"], u["pgu"], u["pgu"] / 2, 0, 0])
+
+    def test_capas_suman_el_total(self):
+        R = np.random.default_rng(3).normal(0.003, 0.02, (50, 480, 5))
+        pt = self.rf.pension_total(R, "H")
+        np.testing.assert_allclose(pt[["autofinanciada_10", "empleador_cci", "crp", "pgu"]].sum(1), pt.total)
+        self.assertTrue((pt.empleador_cci > 0).all() and (pt.pgu >= 0).all())
+
+
 class TestBandas(unittest.TestCase):
     def test_bandas_oficiales_en_config(self):
         from afp import config

@@ -1,0 +1,17 @@
+estrategia,capa,p5,mediana,p95,tasa_reemplazo_mediana,prob_tr_meta,sexo
+Por defecto (ley),Solo 10% del trabajador,5.83972,9.73842,16.28289,0.26847,0.10220,H
+Por defecto (ley),+ cotización del empleador,8.41815,13.81534,22.63814,0.38086,0.43740,H
+Por defecto (ley),+ rentabilidad protegida,9.18387,14.58106,23.40386,0.40197,0.50620,H
+Por defecto (ley),+ PGU (pensión total),15.48747,20.88466,27.80227,0.57575,0.97980,H
+Ciclo de vida (aprox. FG),Solo 10% del trabajador,5.69992,10.89820,22.73244,0.30044,0.25420,H
+Ciclo de vida (aprox. FG),+ cotización del empleador,8.29208,15.31047,30.85199,0.42208,0.55340,H
+Ciclo de vida (aprox. FG),+ rentabilidad protegida,9.05779,16.07618,31.61770,0.44319,0.60650,H
+Ciclo de vida (aprox. FG),+ PGU (pensión total),15.36139,22.37978,31.61770,0.61697,0.97660,H
+Por defecto (ley),Solo 10% del trabajador,3.88505,6.29977,10.07880,0.17367,0.00090,M
+Por defecto (ley),+ cotización del empleador,5.55685,8.84704,13.85461,0.24390,0.03350,M
+Por defecto (ley),+ rentabilidad protegida,6.11770,9.40790,14.41547,0.25936,0.04750,M
+Por defecto (ley),+ PGU (pensión total),12.42130,15.71150,20.71907,0.43314,0.69620,M
+Ciclo de vida (aprox. FG),Solo 10% del trabajador,3.69210,7.14136,14.78860,0.19687,0.05440,M
+Ciclo de vida (aprox. FG),+ cotización del empleador,5.31671,9.93357,19.90312,0.27385,0.17870,M
+Ciclo de vida (aprox. FG),+ rentabilidad protegida,5.87756,10.49443,20.46398,0.28931,0.20640,M
+Ciclo de vida (aprox. FG),+ PGU (pensión total),12.18117,16.79803,26.44996,0.46309,0.74910,M
