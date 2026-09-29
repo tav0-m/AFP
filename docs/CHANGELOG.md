@@ -1,5 +1,12 @@
 # Registro de cambios
 
+## 2026-09-30 (noche)
+- **Simulador personal 2.0** (`app/index.html`): mercado futuro con consenso 2026 por defecto (factores de recentrado
+  por fondo que exporta el pipeline, `escenarios.factores_recentrado`), reforma 2025 activable (cotización del empleador
+  por fecha, rentabilidad protegida y PGU desde los 65), selector de AFP con su comisión y su costo en pensión, y la
+  pensión desglosada por capas. Validado contra Python para el hombre tipo: 21,1 vs 20,9 UF (el simulador parte en
+  oct-2026). Pruebas: 42.
+
 ## 2026-09-30 (tarde)
 - Licencias: MIT para el código (`LICENSE`) y CC BY 4.0 para documentos, figuras y tablero (`LICENSE-CONTENIDO.md`).
 - **Regímenes con variables macro** (hoja de ruta 2.2): `scripts/descarga_mindicador.py` (API pública, sin

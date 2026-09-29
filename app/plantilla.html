@@ -110,6 +110,10 @@ footer{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padd
 .error{color:var(--bad);font-size:13px}
 @media (max-width:900px){.sim{grid-template-columns:1fr}.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.graficos{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.tile.capas{grid-column:1/-1}
+.tile.capas b{color:var(--ink);font-weight:600}
+label.check{display:flex;gap:8px;align-items:flex-start;font-weight:500;cursor:pointer}
+label.check input{margin-top:3px}
 </style>
 
 <div class="wrap">
@@ -151,11 +155,13 @@ footer{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padd
         <small>Densidad: fracción de los meses en que cotizas. En Chile ronda el 50–60%.</small>
         <div class="campo"><label for="estrategia">Estrategia de inversión</label><select id="estrategia"></select></div>
         <div class="campo"><label for="escenario">Mercado futuro</label>
-          <select id="escenario">
-            <option value="0">Histórico 2002–2026, por régimen</option>
-            <option value="0.01">Conservador: −1 punto al año</option>
-          </select>
+          <select id="escenario"></select>
+          <small>Consenso 2026: retornos esperados de bonos en UF (BCCh) y acciones globales (J.P. Morgan), con la volatilidad y las crisis de 2002–2026.</small>
         </div>
+        <div class="campo"><label for="afp">Tu AFP</label><select id="afp"></select>
+          <small id="nota-afp"></small></div>
+        <div class="campo"><label class="check"><input id="reforma" type="checkbox" checked> Incluir la reforma 2025 (cotización del empleador y PGU)</label>
+          <small>Ley 21.735: el empleador aporta a tu cuenta de 0,1% hoy a 6% en 2054, y la PGU se paga desde los 65 años según tu pensión.</small></div>
         <p class="nota-ej">Viene cargado un ejemplo: hombre de 35 años con 400 UF ahorradas y sueldo de 30 UF. Cambia cualquier dato y el resultado se recalcula.</p>
         <p class="error" id="error" hidden></p>
       </form>
@@ -179,7 +185,7 @@ footer{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padd
 <section aria-labelledby="t-hall">
   <div class="sec-head">
     <span class="eyebrow">Lo que muestran los datos</span>
-    <h2 id="t-hall">Ocho hallazgos sobre 24 años de multifondos</h2>
+    <h2 id="t-hall">Lo que muestran 24 años de multifondos y la reforma</h2>
   </div>
   <div class="hallazgos" id="hallazgos"></div>
   <div class="graficos">
@@ -235,8 +241,8 @@ footer{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padd
       <li>Pensión = saldo ÷ capital necesario unitario, con la tasa de retiro programado vigente.</li></ul></div>
     <div><h3>Límites</h3><ul>
       <li>El ciclo de vida sigue el límite oficial de activos de crecimiento por edad (95% hasta los 38, piso de 29% a los 63), replicado con multifondos.</li>
-      <li>Es la pensión autofinanciada: sin PGU ni beneficiarios de sobrevivencia.</li>
-      <li>El futuro no tiene por qué parecerse a 2002–2026; usa el escenario conservador para acotarlo.</li></ul></div>
+      <li>Con la reforma activada suma la cotización del empleador, la rentabilidad protegida y la PGU (sin Beneficio por Años Cotizados ni pensión de sobrevivencia). La PGU supone que cumples la focalización.</li>
+      <li>El escenario recomendado usa expectativas de mercado de 2026; el histórico supone que se repiten los retornos de 2002–2026, que fueron altos para las acciones.</li></ul></div>
   </div>
 </section>
 
@@ -301,15 +307,26 @@ function pesos(estr, edad, sexo, retiro){
   w[edad <= 35 ? 1 : edad <= corte ? 2 : 3] = 1; return w;
 }
 
+/* ---------- reforma (Ley 21.735) ---------- */
+const SIM = D.simulador;
+function tasaVigente(cal, fecha){ let r = 0; for (const [a, m, t] of cal) if (fecha >= a + (m-1)/12) r = t; return r; }
+function pgu(base){ const g = SIM.reforma; return g.pgu * Math.min(Math.max((g.superior - base) / (g.superior - g.inferior), 0), 1); }
+
 function simular(p, n=2000){
   const T = (p.retiro - p.edad) * 12;
   const edades = Array.from({length:T}, (_,t) => p.edad + Math.floor(t/12));
-  const aporte = edades.map(e => p.sueldo * Math.pow(1.015, Math.max(0, Math.min(e,50) - Math.min(p.edad,50))) * p.tasa * p.dens);
+  const f0 = SIM.inicio[0] + (SIM.inicio[1]-1)/12, fechas = edades.map((_,t) => f0 + t/12);
+  const base = edades.map(e => p.sueldo * Math.pow(1.015, Math.max(0, Math.min(e,50) - Math.min(p.edad,50))) * p.dens);
+  const aporte = base.map(b => b * p.tasa);                                         // cotización del trabajador
+  const aporteEmp = base.map((b, t) => p.reforma ? b * tasaVigente(SIM.reforma.empleador_cci, fechas[t]) : 0);
+  const crp = base.reduce((s, b, t) => s + (p.reforma ? b * tasaVigente(SIM.reforma.crp, fechas[t]) : 0)
+                                            * Math.pow(1 + SIM.reforma.tasa_crp_real, (T - t)/12), 0);
   const sueldoFinal = p.sueldo * Math.pow(1.015, Math.max(0, Math.min(p.retiro-1,50) - Math.min(p.edad,50)));
   const W = {}; for (const e of ESTRATEGIAS) W[e] = edades.map(x => pesos(e, x, p.sexo, p.retiro));
-  const hc = Math.pow(1 - p.castigo, 1/12);
+  const hc = SIM.mercados[p.mercado].factores;                                     // recentrado por fondo
   const anios = p.retiro - p.edad, factor = cnu(p.retiro, p.sexo, 2026 + anios);
-  const res = {}; for (const e of ESTRATEGIAS) res[e] = new Float64Array(n);
+  const res = {}, resEmp = {}, resC = {};
+  for (const e of ESTRATEGIAS){ res[e] = new Float64Array(n); resEmp[e] = new Float64Array(n); resC[e] = new Float64Array(n); }
   const fan = Array.from({length: anios+1}, () => new Float64Array(n));
   const rnd = rng(20260927 + p.edad*101 + p.retiro*7 + (p.sexo==="M"?5:0));
   const idx = new Int32Array(T); const RE = D.reactivo;
@@ -320,7 +337,7 @@ function simular(p, n=2000){
       const u = rnd(); let nx = 0; while (nx < K-1 && u > CUM[reg][nx]) nx++; reg = nx;
     }
     for (const e of ESTRATEGIAS){
-      let S = p.saldo; const w = W[e]; const sel = e === p.estrategia;
+      let S = p.saldo, SE = 0, SC = 0; const w = W[e]; const sel = e === p.estrategia;
       if (sel) fan[0][s] = S;
       if (e === "Reactivo (market timing)"){
         let enE = false, mesesE = 0, pend = 0, espera = 0; const hp = [0,0,0], ha = [0,0,0];
@@ -328,28 +345,32 @@ function simular(p, n=2000){
           if (pend && espera === 0){ enE = pend === 1; if (enE) mesesE = 0; pend = 0; }
           if (espera > 0) espera--;
           const r = R[idx[t]]; const wt = w[t];
-          let rb = 0; for (let f = 0; f < 5; f++) rb += wt[f]*r[f];
-          let rp = enE ? r[4] : rb; rp = (1+rp)*hc - 1;
-          S = (S + aporte[t]) * (1 + rp);
-          hp.shift(); hp.push(rp); ha.shift(); ha.push((1+r[0])*hc-1); if (enE) mesesE++;
+          let rb = 0; for (let f = 0; f < 5; f++) rb += wt[f]*((1+r[f])*hc[f]-1);
+          const rp = enE ? (1+r[4])*hc[4]-1 : rb;
+          S = (S + aporte[t]) * (1 + rp); SE = (SE + aporteEmp[t]) * (1 + rp); SC = (SC + aporte[t]) * (1 + rp);
+          hp.shift(); hp.push(rp); ha.shift(); ha.push((1+r[0])*hc[0]-1); if (enE) mesesE++;
           if (t >= 2 && pend === 0){
             const c3 = (1+hp[0])*(1+hp[1])*(1+hp[2]) - 1, a3 = (1+ha[0])*(1+ha[1])*(1+ha[2]) - 1;
             if (!enE && c3 < RE.umbral_caida_3m){ pend = 1; espera = RE.desfase_meses; }
             else if (enE && mesesE >= RE.meses_minimos_en_E && a3 > RE.umbral_recuperacion_3m){ pend = 2; espera = RE.desfase_meses; }
           }
-          if (sel && (t+1) % 12 === 0) fan[(t+1)/12][s] = S;
+          if (sel && (t+1) % 12 === 0) fan[(t+1)/12][s] = S + SE;
         }
       } else {
         for (let t = 0; t < T; t++){
-          const r = R[idx[t]], wt = w[t]; let rp = 0; for (let f = 0; f < 5; f++) rp += wt[f]*r[f];
-          S = (S + aporte[t]) * ((1+rp)*hc);
-          if (sel && (t+1) % 12 === 0) fan[(t+1)/12][s] = S;
+          const r = R[idx[t]], wt = w[t]; let rp = 0; for (let f = 0; f < 5; f++) rp += wt[f]*((1+r[f])*hc[f]-1);
+          S = (S + aporte[t]) * (1 + rp); SE = (SE + aporteEmp[t]) * (1 + rp); SC = (SC + aporte[t]) * (1 + rp);
+          if (sel && (t+1) % 12 === 0) fan[(t+1)/12][s] = S + SE;
         }
       }
-      res[e][s] = S / factor;
+      res[e][s] = S / factor; resEmp[e][s] = SE / factor; resC[e][s] = SC / factor;
     }
   }
-  return {res, fan, factor, sueldoFinal, anios};
+  // pensión por capas: trabajador (res), empleador (resEmp), rentabilidad protegida (determinística) y PGU
+  const pCrp = crp / factor, total = {};
+  for (const e of ESTRATEGIAS){ total[e] = new Float64Array(n);
+    for (let s = 0; s < n; s++){ const propia = res[e][s] + resEmp[e][s] + pCrp; total[e][s] = propia + (p.reforma ? pgu(propia) : 0); } }
+  return {res, resEmp, resC, pCrp, total, fan, factor, sueldoFinal, anios};
 }
 const q = (arr, p) => { const a = Float64Array.from(arr).sort(); const i = (a.length-1)*p, lo = Math.floor(i);
   return a[lo] + (a[Math.min(lo+1,a.length-1)] - a[lo]) * (i - lo); };
@@ -359,6 +380,12 @@ let sexo = "H";
 const sel = $("estrategia");
 for (const e of ESTRATEGIAS){ const o = document.createElement("option"); o.value = e; o.textContent = e; sel.appendChild(o); }
 sel.value = "Por defecto (ley)";
+SIM.mercados.forEach((mk, i) => { const o = document.createElement("option"); o.value = i;
+  o.textContent = i === 0 ? "Consenso 2026 (recomendado)" : mk.nombre; $("escenario").appendChild(o); });
+const AFPS = Object.entries(SIM.comisiones).sort((a,b) => a[1]-b[1]), C_MIN = AFPS[0][1];
+for (const [nombre, c] of AFPS){ const o = document.createElement("option"); o.value = nombre;
+  o.textContent = `${nombre} (comisión ${nf(c*100,2)}%)`; $("afp").appendChild(o); }
+$("afp").value = "Habitat";
 function setSexo(s){ sexo = s; $("sexoH").setAttribute("aria-pressed", s==="H"); $("sexoM").setAttribute("aria-pressed", s==="M");
   $("retiro").value = D.edad_legal[s]; programar(); }
 $("sexoH").onclick = () => setSexo("H"); $("sexoM").onclick = () => setSexo("M");
@@ -369,7 +396,8 @@ $("form").addEventListener("submit", e => e.preventDefault());
 function leer(){
   const v = id => parseFloat($(id).value);
   const p = {sexo, edad: Math.round(v("edad")), retiro: Math.round(v("retiro")), saldo: v("saldo"), sueldo: v("sueldo"),
-    tasa: v("tasa")/100, dens: v("dens")/100, estrategia: sel.value, castigo: parseFloat($("escenario").value)};
+    tasa: v("tasa")/100, dens: v("dens")/100, estrategia: sel.value, mercado: parseInt($("escenario").value, 10),
+    afp: $("afp").value, reforma: $("reforma").checked};
   const err = [];
   if (!(p.edad >= 18 && p.edad <= 64)) err.push("La edad actual debe estar entre 18 y 64 años.");
   if (!(p.retiro > p.edad && p.retiro <= 75)) err.push("La edad de pensión debe ser mayor que la edad actual y como máximo 75.");
@@ -385,16 +413,25 @@ function correr(){
   $("error").hidden = !err.length; $("error").textContent = err.join(" ");
   if (err.length) return;
   const out = simular(p);
-  const x = out.res[p.estrategia], base = out.res["Por defecto (ley)"];
+  const x = out.total[p.estrategia], base = out.total["Por defecto (ley)"];
   const med = q(x,.5), p5 = q(x,.05), p95 = q(x,.95);
   const tr = med / out.sueldoFinal; let meta = 0; for (const v of x) if (v/out.sueldoFinal >= .4) meta++;
+  const m10 = q(out.res[p.estrategia],.5), mEmp = q(out.resEmp[p.estrategia],.5);
+  const mPgu = Math.max(med - m10 - mEmp - out.pCrp, 0);
+  const pguTarde = p.reforma && p.retiro < SIM.reforma.edad_pgu;
   $("tiles").innerHTML = `
-    <div class="tile destacado"><span class="k">PENSIÓN MEDIANA</span><span class="v">${nf(med)} UF</span><span class="s">${clp(med*D.uf)} al mes, en pesos de hoy</span></div>
+    <div class="tile destacado"><span class="k">${p.reforma ? "PENSIÓN TOTAL MEDIANA" : "PENSIÓN MEDIANA"}</span><span class="v">${nf(med)} UF</span><span class="s">${clp(med*D.uf)} al mes, en pesos de hoy${pguTarde ? " · la PGU se suma desde los 65" : ""}</span></div>
     <div class="tile"><span class="k">RANGO PROBABLE (90%)</span><span class="v">${nf(p5)}–${nf(p95)}</span><span class="s">UF al mes, percentiles 5 y 95</span></div>
     <div class="tile"><span class="k">TASA DE REEMPLAZO</span><span class="v">${pct(tr)}</span><span class="s">de tu último sueldo (${nf(out.sueldoFinal,0)} UF)</span></div>
-    <div class="tile"><span class="k">PROB. DE LLEGAR AL 40%</span><span class="v">${pct(meta/x.length)}</span><span class="s">de los escenarios</span></div>`;
+    <div class="tile"><span class="k">PROB. DE LLEGAR AL 40%</span><span class="v">${pct(meta/x.length)}</span><span class="s">de los escenarios</span></div>` +
+    (p.reforma ? `<div class="tile capas"><span class="k">DE DÓNDE VIENE TU PENSIÓN (MEDIANAS)</span><span class="s">
+      Tu cotización y saldo: <b>${nf(m10)} UF</b> · Empleador: <b>${nf(mEmp)} UF</b> · Rentabilidad protegida: <b>${nf(out.pCrp)} UF</b> · PGU: <b>${nf(mPgu)} UF</b></span></div>` : "");
+  const c = SIM.comisiones[p.afp], dc = c - C_MIN;
+  const costo = dc / p.tasa * q(out.resC[p.estrategia], .5);        // pensión que financiaría la diferencia de comisión
+  $("nota-afp").textContent = `Pagas ${clp(p.sueldo * D.uf * c)} al mes de comisión (${nf(c*100,2)}% de tu sueldo, aparte del ${nf(p.tasa*100,0)}%).` +
+    (dc > 0 ? ` En la AFP más barata (${AFPS[0][0]}) esa diferencia, ahorrada, sumaría cerca de ${nf(costo,1)} UF al mes a tu pensión.` : " Es la comisión más baja del sistema.");
   if (p.estrategia === "Por defecto (ley)"){
-    const cv = out.res["Ciclo de vida (aprox. FG)"]; const d = q(cv,.5)/med - 1;
+    const cv = out.total["Ciclo de vida (aprox. FG)"]; const d = q(cv,.5)/med - 1;
     $("comparacion").innerHTML = `Estás en el fondo por defecto. Con los mismos escenarios, un fondo de ciclo de vida te daría una mediana <span class="${d>=0?"sube":"baja"}">${d>=0?"▲":"▼"} ${pct(Math.abs(d),1)} ${d>=0?"mayor":"menor"}</span>.`;
   } else {
     const dm = med/q(base,.5) - 1, dp = p5/q(base,.05) - 1;
@@ -402,7 +439,7 @@ function correr(){
     $("comparacion").innerHTML = `Frente al fondo por defecto de la ley, con los mismos escenarios: ${f(dm)} en la mediana y ${f(dp)} en el escenario pesimista (percentil 5).`;
   }
   dibujarFan(out, p);
-  const filas = ESTRATEGIAS.map(e => ({e, med:q(out.res[e],.5), p5:q(out.res[e],.05), p95:q(out.res[e],.95)})).sort((a,b)=>b.med-a.med);
+  const filas = ESTRATEGIAS.map(e => ({e, med:q(out.total[e],.5), p5:q(out.total[e],.05), p95:q(out.total[e],.95)})).sort((a,b)=>b.med-a.med);
   const bm = q(base,.5);
   $("ranking").innerHTML = `<thead><tr><th>Estrategia</th><th>Mediana (UF)</th><th>Pesimista P5</th><th>Optimista P95</th><th>Mediana vs por defecto</th></tr></thead><tbody>` +
     filas.map(f => `<tr class="${f.e===p.estrategia?"sel":""}"><td><span class="sw" style="background:var(${COLOR[f.e]})"></span>${f.e}</td><td>${nf(f.med)}</td><td>${nf(f.p5)}</td><td>${nf(f.p95)}</td><td>${f.e==="Por defecto (ley)"?"—":(f.med/bm-1>=0?"+":"−")+pct(Math.abs(f.med/bm-1),1)}</td></tr>`).join("") + `</tbody>`;

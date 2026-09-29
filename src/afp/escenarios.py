@@ -16,6 +16,13 @@ def retornos_objetivo(esg: dict, gp: dict) -> dict:
             for f, g in gp["crecimiento_multifondos"].items()}
 
 
+def factores_recentrado(R: np.ndarray, objetivo: dict, fondos) -> list[float]:
+    """Factor mensual por fondo que lleva la media geométrica de los escenarios R al retorno objetivo
+    (lo mismo que simular(objetivo=...) aplica internamente; se exporta para el simulador web)."""
+    geo = np.exp(np.log1p(R).mean(axis=(0, 1)))
+    return [float((1 + objetivo[f]) ** (1 / 12) / g) for f, g in zip(fondos, geo)]
+
+
 def simular(m: pd.DataFrame, modelo: dict, meses: int, n: int, semilla: int = 0,
             regimen_inicial: int | None = None, ajuste_retorno_anual: float = 0.0,
             objetivo: dict | None = None) -> np.ndarray:

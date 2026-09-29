@@ -372,6 +372,19 @@ def main():
                        "pgu": reforma.parametros_uf()},
            "optimo": opt_res.round(5).to_dict("records"),
            "comisiones": com["tabla"].round(6).to_dict("records"),
+           "simulador": {
+               "mercados": [{"nombre": "Consenso de mercado 2026", "factores": escenarios.factores_recentrado(
+                                 R, escenarios.retornos_objetivo(config.ESG["Consenso de mercado 2026"], config.GLIDEPATH), config.FONDOS)},
+                            {"nombre": "Histórico 2002-2026", "factores": [1.0] * 5},
+                            {"nombre": "Conservador: histórico −1 punto al año", "factores": [0.99 ** (1 / 12)] * 5},
+                            {"nombre": "Sin prima de la renta variable", "factores": escenarios.factores_recentrado(
+                                 R, escenarios.retornos_objetivo(config.ESG["Prima de crecimiento nula"], config.GLIDEPATH), config.FONDOS)}],
+               "reforma": {"empleador_cci": [[a, m_, t_] for (a, m_), t_ in config.REFORMA["empleador_cci"]],
+                           "crp": [[a, m_, t_] for (a, m_), t_ in config.REFORMA["crp"]],
+                           "tasa_crp_real": config.REFORMA["tasa_crp_real"], "edad_pgu": config.REFORMA["edad_pgu"],
+                           **reforma.parametros_uf()},
+               "comisiones": {k.title().replace("Planvital", "PlanVital"): v for k, v in config.COMISIONES["tasas"].items()},
+               "inicio": [2026, 10]},
            "microsimulacion": {"sexo": micro["sexo"].round(4).to_dict("records"),
                                "quintil": micro["quintil"].round(4).to_dict("records"),
                                "brecha": micro["brecha"].round(4).to_dict("records"),

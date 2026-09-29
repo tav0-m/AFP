@@ -80,7 +80,8 @@ python scripts/descarga_bcentral.py --salida data/raw
 ```
 
 Abrir el **tablero de resultados**: `app/tablero.html` (gráficos interactivos de todos los hallazgos) y el
-**simulador personal**: `app/index.html`. Ambos son autocontenidos y los regenera el pipeline.
+**simulador personal**: `app/index.html`, que proyecta tu pensión total con la reforma, la PGU, tu AFP y su comisión, con
+escenarios de mercado de 2026. Ambos son autocontenidos y los regenera el pipeline.
 
 La integración continua (`.github/workflows/ci.yml`) corre las pruebas y el pipeline completo en cada cambio
 y una vez por semana, para detectar a tiempo si una fuente cambia de formato.

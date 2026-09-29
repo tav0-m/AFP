@@ -182,6 +182,13 @@ class TestIncertidumbre(unittest.TestCase):
         geo = np.exp(np.log1p(R).mean(axis=(0, 1))) ** 12 - 1
         np.testing.assert_allclose(geo, [0.04, 0.02], atol=1e-10)
 
+    def test_factores_recentrado_para_el_simulador(self):
+        from afp import escenarios
+        R = np.random.default_rng(6).normal(0.004, 0.03, (200, 240, 2))
+        f = escenarios.factores_recentrado(R, {"A": 0.04, "E": 0.02}, ["A", "E"])
+        geo = np.exp(np.log1p((1 + R) * np.array(f) - 1).mean(axis=(0, 1))) ** 12 - 1
+        np.testing.assert_allclose(geo, [0.04, 0.02], atol=1e-12)
+
     def test_ic_correlacion(self):
         lo, hi = self.inc.ic_correlacion(0.81, 36)
         self.assertLess(lo, 0.81); self.assertGreater(hi, 0.81); self.assertLess(hi, 1)
