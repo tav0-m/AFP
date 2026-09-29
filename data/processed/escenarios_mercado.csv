@@ -1,0 +1,7 @@
+escenario,sexo,retorno_real_A,retorno_real_E,cv_vs_defecto_mediana,cv_vs_defecto_p5,prob_cv_supera_defecto,reactivo_vs_defecto_mediana,mediana_defecto_uf,mediana_cv_uf,prob_tr_meta_defecto,prob_tr_meta_cv
+Histórico 2002-2026,H,,,0.45555,0.19480,0.92530,-0.04870,10.13996,14.75922,0.13130,0.51150
+Histórico 2002-2026,M,,,0.51372,0.19918,0.91170,-0.03980,6.50000,9.83918,0.00190,0.20100
+Consenso de mercado 2026,H,0.04069,0.02674,0.11909,-0.02394,0.68410,-0.01205,9.73842,10.89820,0.10220,0.25420
+Consenso de mercado 2026,M,0.04069,0.02674,0.13359,-0.04966,0.67830,-0.00889,6.29977,7.14136,0.00090,0.05440
+Prima de crecimiento nula,H,0.02520,0.02520,-0.01256,-0.10235,0.49080,0.01067,8.39670,8.29125,0.03380,0.08570
+Prima de crecimiento nula,M,0.02520,0.02520,-0.01658,-0.14147,0.48550,0.01045,5.56603,5.47376,0.00020,0.01080

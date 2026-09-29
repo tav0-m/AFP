@@ -1,0 +1,448 @@
+<title>Pensiones AFP en datos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  color-scheme: light;
+  --plano:#f9f9f7; --sup:#fcfcfb; --tinta:#0b0b0b; --tinta2:#52514e; --muda:#898781;
+  --grilla:#e1e0d9; --eje:#c3c2b7; --borde:rgba(11,11,11,.10); --lavado:rgba(74,58,167,.06);
+  --fA:#2a78d6; --fB:#eb6834; --fC:#1baf7a; --fD:#eda100; --fE:#e87ba4;
+  --sDef:#008300; --sCV:#4a3aa7; --sRe:#e34948;
+  --reg1:rgba(137,135,129,.16); --reg2:rgba(227,73,72,.14);
+  --sube:#006300; --baja:#b3261e;
+  --display:"IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --cuerpo:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --plano:#0d0d0d; --sup:#1a1a19; --tinta:#ffffff; --tinta2:#c3c2b7; --muda:#898781;
+    --grilla:#2c2c2a; --eje:#383835; --borde:rgba(255,255,255,.10); --lavado:rgba(144,133,233,.08);
+    --fA:#3987e5; --fB:#d95926; --fC:#199e70; --fD:#c98500; --fE:#d55181;
+    --sDef:#0ca30c; --sCV:#9085e9; --sRe:#e66767;
+    --reg1:rgba(195,194,183,.10); --reg2:rgba(230,103,103,.14);
+    --sube:#0ca30c; --baja:#e66767;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --plano:#0d0d0d; --sup:#1a1a19; --tinta:#ffffff; --tinta2:#c3c2b7; --muda:#898781;
+  --grilla:#2c2c2a; --eje:#383835; --borde:rgba(255,255,255,.10); --lavado:rgba(144,133,233,.08);
+  --fA:#3987e5; --fB:#d95926; --fC:#199e70; --fD:#c98500; --fE:#d55181;
+  --sDef:#0ca30c; --sCV:#9085e9; --sRe:#e66767;
+  --reg1:rgba(195,194,183,.10); --reg2:rgba(230,103,103,.14);
+  --sube:#0ca30c; --baja:#e66767;
+}
+*{box-sizing:border-box}
+body{background:var(--plano); color:var(--tinta); font:15px/1.55 var(--cuerpo); margin:0}
+.envoltura{max-width:1120px; margin:0 auto; padding-inline:clamp(16px,4vw,40px); padding-block:28px 64px}
+h1,h2,h3{font-family:var(--display); text-wrap:balance; margin:0; letter-spacing:-.005em}
+h1{font-size:clamp(30px,4.6vw,46px); line-height:1.05; font-weight:700; max-width:22ch}
+h2{font-size:clamp(22px,2.8vw,28px); font-weight:600}
+h3{font-size:17px; font-weight:600}
+p{margin:0; max-width:68ch}
+a{color:var(--sCV)}
+.num{font-variant-numeric:tabular-nums}
+.eyebrow{font:600 12px/1 var(--cuerpo); letter-spacing:.09em; text-transform:uppercase; color:var(--tinta2)}
+.cabecera{display:grid; gap:18px; padding-block:12px 26px; border-bottom:1px solid var(--borde)}
+.tesis{font-size:17px; color:var(--tinta2); max-width:70ch}
+.sello{display:flex; flex-wrap:wrap; gap:6px 18px; font-size:13px; color:var(--tinta2)}
+.sello b{color:var(--tinta); font-weight:600}
+.cifras{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; padding-block:22px}
+.cifra{background:var(--sup); border:1px solid var(--borde); border-radius:8px; padding:16px 18px; display:grid; gap:6px; align-content:start}
+.cifra .valor{font-family:var(--display); font-size:34px; font-weight:700; line-height:1}
+.cifra .valor small{font-size:16px; font-weight:600; color:var(--tinta2)}
+.cifra .rotulo{font-size:13px; color:var(--tinta2)}
+nav.secciones{position:sticky; top:env(safe-area-inset-top,0px); z-index:5; background:var(--plano); border-bottom:1px solid var(--borde);
+  display:flex; gap:4px; overflow-x:auto; padding-block:8px; scrollbar-width:none}
+nav.secciones a{flex:none; text-decoration:none; color:var(--tinta2); font:500 13.5px/1 var(--cuerpo); padding:8px 12px; border-radius:6px}
+nav.secciones a:hover, nav.secciones a:focus-visible{background:var(--lavado); color:var(--tinta); outline:none}
+section{display:grid; gap:16px; padding-block:40px 8px; scroll-margin-top:56px}
+.lectura{color:var(--tinta2)}
+.lienzo{background:var(--sup); border:1px solid var(--borde); border-radius:8px; padding:14px 14px 8px; display:grid; gap:10px}
+.barra{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px}
+.leyenda{display:flex; flex-wrap:wrap; gap:4px 14px; font-size:12.5px; color:var(--tinta2)}
+.leyenda span{display:inline-flex; align-items:center; gap:6px}
+.leyenda i{display:inline-block; width:14px; height:3px; border-radius:2px}
+.leyenda i.caja{height:10px; width:12px; border-radius:2px}
+.segmentado{display:inline-flex; border:1px solid var(--borde); border-radius:7px; overflow:hidden}
+.segmentado button{font:500 13px/1 var(--cuerpo); color:var(--tinta2); background:transparent; border:0; padding:8px 12px; cursor:pointer}
+.segmentado button[aria-pressed="true"]{background:var(--tinta); color:var(--sup)}
+.segmentado button:focus-visible{outline:2px solid var(--sCV); outline-offset:-2px}
+.grafico{width:100%; position:relative}
+.grafico svg{display:block; width:100%; height:auto; overflow:visible}
+.nota{font-size:12.5px; color:var(--muda)}
+.dos{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr)); gap:16px}
+ol.hallazgos{list-style:none; margin:0; padding:0; display:grid; gap:0; counter-reset:h}
+ol.hallazgos li{counter-increment:h; display:grid; grid-template-columns:2.2em 1fr; gap:4px 12px; padding-block:14px; border-top:1px solid var(--borde)}
+ol.hallazgos li::before{content:counter(h); font:700 20px/1.2 var(--display); color:var(--sCV); grid-row:span 2}
+ol.hallazgos b{font-weight:600}
+ol.hallazgos p{font-size:14px; color:var(--tinta2); max-width:none}
+details{font-size:13.5px}
+summary{cursor:pointer; color:var(--tinta2); padding-block:4px}
+.tabla{overflow-x:auto}
+table{border-collapse:collapse; width:100%; font-variant-numeric:tabular-nums; font-size:13px}
+th,td{text-align:right; padding:6px 10px; border-bottom:1px solid var(--grilla); white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600; color:var(--tinta2)}
+#tip{position:fixed; z-index:20; pointer-events:none; background:var(--sup); color:var(--tinta); border:1px solid var(--borde);
+  box-shadow:0 6px 24px rgba(0,0,0,.14); border-radius:7px; padding:9px 11px; font-size:12.5px; line-height:1.45; max-width:280px}
+#tip .t{font-weight:600; margin-bottom:3px}
+#tip .f{display:flex; justify-content:space-between; gap:14px}
+#tip .f span:first-child{display:inline-flex; align-items:center; gap:6px; color:var(--tinta2)}
+#tip i{display:inline-block; width:9px; height:9px; border-radius:2px}
+svg text{font-family:var(--cuerpo); fill:var(--tinta2); font-size:11.5px}
+svg .tick text{fill:var(--muda); font-variant-numeric:tabular-nums}
+svg .fuerte{fill:var(--tinta); font-weight:600}
+
+footer{margin-top:48px; padding-top:20px; border-top:1px solid var(--borde); display:grid; gap:8px; font-size:13px; color:var(--tinta2)}
+@media (prefers-reduced-motion: no-preference){ .grafico svg .marca{transition:opacity .15s} }
+</style>
+
+<div class="envoltura">
+  <header class="cabecera">
+    <span class="eyebrow">Chile · Multifondos 2002–2026 → Fondos Generacionales 2027</span>
+    <h1>¿Qué pensión deja cada forma de invertir el ahorro previsional?</h1>
+    <p class="tesis">24 años de valores cuota oficiales, un modelo de regímenes de mercado y 10.000 vidas laborales simuladas.
+      El ciclo de vida que traen los fondos generacionales mejora la pensión, pero cuánto depende casi por completo de la prima
+      que pague la renta variable en el futuro.</p>
+    <div class="sello" id="sello"></div>
+  </header>
+
+  <div class="cifras" id="cifras"></div>
+
+  <nav class="secciones" aria-label="Secciones">
+    <a href="#hallazgos">Hallazgos</a><a href="#mercado">Mercado 2002–2026</a><a href="#glidepath">Glidepath oficial</a>
+    <a href="#estrategias">Pensión por estrategia</a><a href="#supuestos">Supuestos de mercado</a>
+    <a href="#incertidumbre">Incertidumbre</a><a href="#robustez">Robustez</a><a href="#bandas">Premios y castigos</a>
+  </nav>
+
+  <section id="hallazgos">
+    <h2>Diez hallazgos, calculados desde los datos</h2>
+    <ol class="hallazgos" id="lista-hallazgos"></ol>
+  </section>
+
+  <section id="mercado">
+    <h2>Valor real de los multifondos y regímenes de mercado</h2>
+    <p class="lectura" id="lectura-mercado"></p>
+    <div class="lienzo">
+      <div class="barra"><div class="leyenda" id="ley-mercado"></div></div>
+      <div class="grafico" id="g-mercado"></div>
+      <p class="nota">Índice base 100 en ago-2002, en UF (real), ponderado por afiliados, escala logarítmica. Sombreado: régimen más probable según el HMM de 3 estados.</p>
+    </div>
+  </section>
+
+  <section id="glidepath">
+    <h2>El glidepath oficial toma más riesgo que la ley actual toda la vida laboral</h2>
+    <p class="lectura">Máximo de activos de crecimiento por edad de los fondos generacionales (SP, Res. Ex. 1195) frente a la
+      exposición del fondo por defecto de la ley de multifondos. Las líneas finas marcan cuánto crecimiento tiene hoy cada multifondo;
+      el modelo replica la curva oficial combinando los dos fondos vecinos.</p>
+    <div class="lienzo">
+      <div class="barra"><div class="leyenda" id="ley-glide"></div></div>
+      <div class="grafico" id="g-glide"></div>
+      <p class="nota">Curva de la consulta pública (jul-2026) digitalizada y reescalada al tope definitivo de 95%. Cartera de multifondos a mar-2026.</p>
+    </div>
+  </section>
+
+  <section id="estrategias">
+    <h2>Pensión simulada por estrategia</h2>
+    <p class="lectura" id="lectura-estrategias"></p>
+    <div class="lienzo">
+      <div class="barra">
+        <div class="leyenda"><span><i style="background:var(--tinta2)"></i>percentil 5–95</span><span><i class="caja" style="background:var(--tinta2)"></i>25–75</span><span>○ mediana</span></div>
+        <div class="segmentado" role="group" aria-label="Sexo">
+          <button type="button" id="mc-H" aria-pressed="true">Hombre, 25–65</button><button type="button" id="mc-M" aria-pressed="false">Mujer, 25–60</button>
+        </div>
+      </div>
+      <div class="grafico" id="g-mc"></div>
+      <details><summary>Ver tabla</summary><div class="tabla" id="t-mc"></div></details>
+    </div>
+  </section>
+
+  <section id="supuestos">
+    <h2>Con las expectativas de mercado de hoy, la ventaja se achica</h2>
+    <p class="lectura" id="lectura-esg"></p>
+    <div class="lienzo">
+      <div class="barra">
+        <div class="leyenda"><span><i style="background:var(--sDef)"></i>Fondo por defecto (ley)</span><span><i style="background:var(--sCV)"></i>Ciclo de vida (glidepath oficial)</span></div>
+        <div class="segmentado" role="group" aria-label="Sexo">
+          <button type="button" id="esg-H" aria-pressed="true">Hombre</button><button type="button" id="esg-M" aria-pressed="false">Mujer</button>
+        </div>
+      </div>
+      <div class="grafico" id="g-esg"></div>
+      <details><summary>Ver tabla</summary><div class="tabla" id="t-esg"></div></details>
+      <p class="nota">Mismos regímenes, volatilidades y colas históricas; solo cambia el retorno esperado. Consenso 2026: bono en UF a 10 años 2,52% (BCCh) y MSCI ACWI 7,0% USD con inflación 2,5% (J.P. Morgan LTCMA 2026).</p>
+    </div>
+  </section>
+
+  <section id="incertidumbre">
+    <h2>¿Y si la historia 2002–2026 hubiera sido otra?</h2>
+    <p class="lectura" id="lectura-inc"></p>
+    <div class="lienzo">
+      <div class="barra"><div class="leyenda"><span><i class="caja" style="background:var(--sCV)"></i>el ciclo de vida gana</span><span><i class="caja" style="background:var(--sRe)"></i>el fondo por defecto gana</span></div></div>
+      <div class="grafico" id="g-inc"></div>
+      <p class="nota">Cada punto es una historia remuestreada por bloques de meses (bootstrap estacionario, bloques de 12 meses en promedio), con el HMM reestimado y 2.000 escenarios.</p>
+    </div>
+  </section>
+
+  <div class="dos">
+    <section id="robustez">
+      <h2>Robustez frente a otros supuestos</h2>
+      <p class="lectura">Pensión mediana frente al fondo por defecto, con los mismos escenarios en cada caso.</p>
+      <div class="lienzo">
+        <div class="leyenda"><span><i class="caja" style="background:var(--sCV)"></i>Ciclo de vida</span><span><i class="caja" style="background:var(--sRe)"></i>Reactivo</span></div>
+        <div class="grafico" id="g-rob"></div>
+      </div>
+    </section>
+    <section id="bandas">
+      <h2>¿Morderán los premios y castigos?</h2>
+      <p class="lectura" id="lectura-bandas"></p>
+      <div class="lienzo">
+        <div class="grafico" id="g-bandas"></div>
+        <p class="nota">Rentabilidad de 36 meses de cada AFP menos la de sus pares (p.p. anuales), AFP-meses 2005–2026.</p>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <span>Fuentes: Superintendencia de Pensiones (valores cuota, carteras, Régimen de Inversión de los Fondos Generacionales), Banco Central de Chile (UF y tasas), CMF (tablas de mortalidad), J.P. Morgan AM (Long-Term Capital Market Assumptions 2026).</span>
+    <span>Proyecto educativo y de investigación. No es asesoría previsional ni financiera.</span>
+  </footer>
+</div>
+<div id="tip" hidden></div>
+
+<script id="datos" type="application/json">__DATOS__</script>
+<script>
+(() => {
+"use strict";
+const D = JSON.parse(document.getElementById("datos").textContent);
+const FONDOS = ["A","B","C","D","E"];
+const CF = {A:"--fA",B:"--fB",C:"--fC",D:"--fD",E:"--fE"};
+const CE = {"Por defecto (ley)":"--sDef","Ciclo de vida (aprox. FG)":"--sCV","Reactivo (market timing)":"--sRe"};
+const colorEstr = e => e.startsWith("Fondo") ? CF[e[6]] : CE[e];
+const nombreEstr = e => e.replace(" (aprox. FG)","").replace(" (market timing)","");
+const nf = (x,d=1) => new Intl.NumberFormat("es-CL",{minimumFractionDigits:d,maximumFractionDigits:d}).format(x);
+const pct = (x,d=0) => nf(x*100,d) + "%";
+const pctS = (x,d=0) => (x>=0?"+":"−") + nf(Math.abs(x)*100,d) + "%";
+const $ = id => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg";
+const el = (tag, at={}, padre) => { const e = document.createElementNS(NS, tag);
+  for (const k in at) e.setAttribute(k, at[k]); if (padre) padre.appendChild(e); return e; };
+const lin = (d0,d1,r0,r1) => { const f = v => r0 + (v-d0)/(d1-d0)*(r1-r0); f.inv = p => d0 + (p-r0)/(r1-r0)*(d1-d0); return f; };
+function ticks(a, b, n=5){ const paso = Math.pow(10, Math.floor(Math.log10((b-a)/n))); const m = [1,2,2.5,5,10].find(k => (b-a)/(paso*k) <= n) * paso;
+  const out = []; for (let v = Math.ceil(a/m)*m; v <= b + 1e-9; v += m) out.push(+v.toFixed(10)); return out; }
+function lienzo(id, alto){ const cont = $(id); cont.innerHTML = ""; const w = Math.max(cont.clientWidth, 300);
+  const s = el("svg", {viewBox:`0 0 ${w} ${alto}`, role:"img"}, cont); return [s, w]; }
+const H = document.getElementById("tip");
+function tip(ev, html){ H.innerHTML = html; H.hidden = false;
+  const r = H.getBoundingClientRect(); let x = ev.clientX + 14, y = ev.clientY + 14;
+  if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - 14; if (y + r.height > innerHeight - 8) y = ev.clientY - r.height - 14;
+  H.style.left = Math.max(8,x) + "px"; H.style.top = Math.max(8,y) + "px"; }
+const ocultar = () => { H.hidden = true; };
+const fila = (color, k, v) => `<div class="f"><span>${color ? `<i style="background:var(${color})"></i>` : ""}${k}</span><b class="num">${v}</b></div>`;
+function ejeY(s, y, vals, x0, x1, fmt){ const g = el("g", {class:"tick"}, s);
+  for (const v of vals){ el("line", {x1:x0, x2:x1, y1:y(v), y2:y(v), style:"stroke:var(--grilla)"}, g);
+    el("text", {x:x0-6, y:y(v)+4, "text-anchor":"end"}, g).textContent = fmt(v); } }
+
+/* ---------- cabecera ---------- */
+$("sello").innerHTML = `<span>Valores cuota: <b>${D.rango}</b></span><span>UF al ${D.uf_fecha}: <b class="num">$${nf(D.uf,2)}</b></span><span>Modelo actualizado: <b>${D.generado}</b></span>`;
+const esgH = D.escenarios_mercado.filter(r => r.sexo === "H");
+const esgBy = n => esgH.find(r => r.escenario === n);
+const hist = esgBy("Histórico 2002-2026"), cons = esgBy("Consenso de mercado 2026");
+const mcH = D.montecarlo.H, mcM = D.montecarlo.M, med = (t,e) => t.find(r => r.estrategia === e).mediana;
+const inc = D.incertidumbre, gana = inc.cv_vs_defecto_mediana.filter(v => v > 0).length / inc.cv_vs_defecto_mediana.length;
+$("cifras").innerHTML = [
+  [pctS(hist.cv_vs_defecto_mediana), "pensión mediana del ciclo de vida vs fondo por defecto, si se repite la historia"],
+  [pctS(cons.cv_vs_defecto_mediana), "la misma ventaja con los supuestos de mercado de consenso 2026"],
+  [pct(gana), "de las historias alternativas en que el ciclo de vida gana"],
+  [pct(cons.prob_tr_meta_defecto) + ` <small>/ ${pct(cons.prob_tr_meta_cv)}</small>`, "probabilidad de una tasa de reemplazo de 40% (por defecto / ciclo de vida, consenso)"],
+].map(([v,r]) => `<div class="cifra"><span class="valor num">${v}</span><span class="rotulo">${r}</span></div>`).join("");
+
+$("lista-hallazgos").innerHTML = D.hallazgos.map(h => `<li><b>${h.titulo}</b><p>${h.detalle}</p></li>`).join("");
+
+/* ---------- 1. mercado ---------- */
+const IM = D.indice_mensual, N = IM.fechas.length, ET = D.regimen.etiqueta, RN = D.regimen.nombres;
+const rent = Object.fromEntries(D.rentabilidad.map(r => [r.fondo, r]));
+$("lectura-mercado").textContent = `El Fondo A rindió ${pct(rent.A.rent_real_anual,1)} real al año y el E ${pct(rent.E.rent_real_anual,1)}. ` +
+  `Desde ${IM.fechas[ET.indexOf(1, 180)] ?? "2019"} domina un régimen en que los fondos conservadores se volvieron volátiles: la peor caída real del E fue ${pct(rent.E.max_caida_real,1)}, igual que la del C.`;
+$("ley-mercado").innerHTML = FONDOS.map(f => `<span><i style="background:var(${CF[f]})"></i>Fondo ${f}</span>`).join("") +
+  `<span><i class="caja" style="background:var(--reg1)"></i>${RN[1]}</span><span><i class="caja" style="background:var(--reg2)"></i>${RN[2]}</span>`;
+function gMercado(){
+  const [s, w] = lienzo("g-mercado", 360), m = {l:44, r:62, t:10, b:26};
+  const todos = FONDOS.flatMap(f => IM[f]); const lo = Math.log(Math.min(...todos, 100)*0.95), hi = Math.log(Math.max(...todos)*1.03);
+  const x = lin(0, N-1, m.l, w-m.r), y = lin(lo, hi, 360-m.b, m.t);
+  for (let i = 0; i < N; i++) if (ET[i] > 0) el("rect", {x:x(i-0.5), y:m.t, width:Math.max(x(1)-x(0),1), height:360-m.b-m.t, style:`fill:var(--reg${ET[i]})`}, s);
+  ejeY(s, v => y(Math.log(v)), [100,150,200,300,400].filter(v => Math.log(v) <= hi), m.l, w-m.r, v => v);
+  const gx = el("g", {class:"tick"}, s);
+  for (let i = 0; i < N; i++){ const [a, mes] = IM.fechas[i].split("-"); if (mes === "01" && a % (w < 600 ? 6 : 3) === 0)
+    el("text", {x:x(i), y:360-8, "text-anchor":"middle"}, gx).textContent = a; }
+  for (const f of FONDOS){ el("path", {d: IM[f].map((v,i) => `${i?"L":"M"}${x(i).toFixed(1)},${y(Math.log(v)).toFixed(1)}`).join(""),
+      style:`fill:none;stroke:var(${CF[f]});stroke-width:2;stroke-linejoin:round`}, s);
+    el("text", {x:w-m.r+6, y:y(Math.log(IM[f][N-1]))+4, class:"fuerte"}, s).textContent = `${f} ${nf(IM[f][N-1],0)}`; }
+  const guia = el("line", {y1:m.t, y2:360-m.b, style:"stroke:var(--tinta2);stroke-width:1", opacity:0}, s);
+  const zona = el("rect", {x:m.l, y:m.t, width:w-m.l-m.r, height:360-m.b-m.t, fill:"transparent"}, s);
+  zona.addEventListener("pointermove", ev => { const b = s.getBoundingClientRect(), px = (ev.clientX-b.left)*w/b.width;
+    const i = Math.round(Math.min(Math.max(x.inv(px),0),N-1)); guia.setAttribute("x1",x(i)); guia.setAttribute("x2",x(i)); guia.setAttribute("opacity",1);
+    tip(ev, `<div class="t">${IM.fechas[i]} · ${RN[ET[i]]}</div>` + FONDOS.map(f => fila(CF[f], `Fondo ${f}`, nf(IM[f][i],1))).join("")); });
+  zona.addEventListener("pointerleave", () => { guia.setAttribute("opacity",0); ocultar(); });
+}
+
+/* ---------- 2. glidepath ---------- */
+const G = D.glidepath, GM = G.crecimiento_multifondos;
+$("ley-glide").innerHTML = `<span><i style="background:var(--sCV)"></i>Fondos generacionales (máximo oficial)</span><span><i style="background:var(--sDef)"></i>Ley de multifondos, fondo por defecto (hombre)</span>`;
+function mezcla(p){ return p.map((v,j) => [v,FONDOS[j]]).filter(([v]) => Math.abs(v) > 1e-4).map(([v,f]) => `${nf(v*100,0)}% ${f}`).join(" + ").replace("+ -","− "); }
+function gGlide(){
+  const alto = 330, [s, w] = lienzo("g-glide", alto), m = {l:40, r:62, t:12, b:30};
+  const e0 = G.edad_inicial, eds = G.crecimiento.map((_,i) => e0+i).filter(e => e >= 20);
+  const x = lin(20, 75, m.l, w-m.r), y = lin(0, 1, alto-m.b, m.t);
+  ejeY(s, y, [0,.2,.4,.6,.8,1], m.l, w-m.r, v => nf(v*100,0) + "%");
+  for (const f of FONDOS){ el("line", {x1:m.l, x2:w-m.r, y1:y(GM[f]), y2:y(GM[f]), style:`stroke:var(${CF[f]});stroke-width:1;stroke-dasharray:3 3`}, s);
+    el("text", {x:w-m.r+6, y:y(GM[f])+4}, s).textContent = `Fondo ${f}`; }
+  const gx = el("g", {class:"tick"}, s); for (const e of [20,30,40,50,60,65,70,75]) el("text", {x:x(e), y:alto-10, "text-anchor":"middle"}, gx).textContent = e;
+  const ley = e => e <= 35 ? GM.B : e <= 55 ? GM.C : GM.D;
+  el("path", {d: eds.map((e,i) => `${i?"L":"M"}${x(e)},${y(ley(e))}`).join(""), style:"fill:none;stroke:var(--sDef);stroke-width:2"}, s);
+  el("path", {d: eds.map((e,i) => `${i?"L":"M"}${x(e).toFixed(1)},${y(G.crecimiento[e-e0]).toFixed(1)}`).join(""), style:"fill:none;stroke:var(--sCV);stroke-width:2.5"}, s);
+  el("line", {x1:x(65), x2:x(65), y1:m.t, y2:alto-m.b, style:"stroke:var(--eje)"}, s);
+  const guia = el("line", {y1:m.t, y2:alto-m.b, style:"stroke:var(--tinta2)", opacity:0}, s);
+  const pto = el("circle", {r:4.5, style:"fill:var(--sup);stroke:var(--sCV);stroke-width:2", opacity:0}, s);
+  const zona = el("rect", {x:m.l, y:m.t, width:w-m.l-m.r, height:alto-m.b-m.t, fill:"transparent"}, s);
+  zona.addEventListener("pointermove", ev => { const b = s.getBoundingClientRect(), px = (ev.clientX-b.left)*w/b.width;
+    const e = Math.round(Math.min(Math.max(x.inv(px),20),75)), g = G.crecimiento[e-e0];
+    for (const a of ["x1","x2"]) guia.setAttribute(a, x(e)); guia.setAttribute("opacity",1);
+    pto.setAttribute("cx", x(e)); pto.setAttribute("cy", y(g)); pto.setAttribute("opacity",1);
+    tip(ev, `<div class="t">${e} años</div>` + fila("--sCV","Glidepath oficial", pct(g,0)) + fila("--sDef","Ley, por defecto", pct(ley(e),0)) +
+      `<div class="f"><span>Réplica con multifondos</span><b class="num">${mezcla(G.pesos[e-e0])}</b></div>`); });
+  zona.addEventListener("pointerleave", () => { guia.setAttribute("opacity",0); pto.setAttribute("opacity",0); ocultar(); });
+}
+
+/* ---------- 3. rangos (Monte Carlo y supuestos) ---------- */
+function rangos(id, filas, opciones={}){
+  const alto = opciones.alto ?? (filas.length*34 + 40), [s, w] = lienzo(id, alto);
+  const etiq = w < 560 ? 118 : 190, m = {l:etiq, r:64, t:6, b:26};
+  const xmax = Math.max(...filas.map(r => r.p95)) * 1.04, xmin = Math.min(0, ...filas.map(r => r.p5));
+  const x = lin(xmin, xmax, m.l, w-m.r);
+  const gt = el("g", {class:"tick"}, s);
+  for (const v of ticks(xmin, xmax, w < 560 ? 4 : 7)){ el("line", {x1:x(v), x2:x(v), y1:m.t, y2:alto-m.b, style:"stroke:var(--grilla)"}, gt);
+    el("text", {x:x(v), y:alto-8, "text-anchor":"middle"}, gt).textContent = nf(v,0) + (v === xmax ? "" : ""); }
+  el("text", {x:w-m.r, y:alto-8, "text-anchor":"start", dx:6}, s).textContent = "UF/mes";
+  filas.forEach((r, i) => {
+    const yc = m.t + 14 + i*34 + (r.salto ?? 0), c = `var(${r.color})`;
+    const g = el("g", {class:"marca"}, s);
+    if (r.grupo) el("text", {x:8, y:yc-15, class:"fuerte"}, s).textContent = r.grupo;
+    el("text", {x:m.l-10, y:yc+4, "text-anchor":"end", class:r.destacar ? "fuerte" : ""}, g).textContent = r.nombre;
+    el("line", {x1:x(r.p5), x2:x(r.p95), y1:yc, y2:yc, style:`stroke:${c};stroke-width:2;stroke-linecap:round`}, g);
+    el("line", {x1:x(r.p25), x2:x(r.p75), y1:yc, y2:yc, style:`stroke:${c};stroke-width:8;stroke-linecap:round`}, g);
+    el("circle", {cx:x(r.mediana), cy:yc, r:5.5, style:`fill:var(--sup);stroke:${c};stroke-width:2.5`}, g);
+    el("text", {x:x(r.p95)+8, y:yc+4}, g).textContent = nf(r.mediana,1);
+    const hit = el("rect", {x:m.l, y:yc-15, width:w-m.l-m.r, height:30, fill:"transparent"}, g);
+    hit.addEventListener("pointermove", ev => tip(ev, `<div class="t">${r.grupo ? r.grupo + " · " : ""}${r.nombre}</div>` +
+      fila(null,"Mediana", nf(r.mediana,2) + " UF") + fila(null,"Percentil 25–75", `${nf(r.p25,1)} – ${nf(r.p75,1)}`) +
+      fila(null,"Percentil 5–95", `${nf(r.p5,1)} – ${nf(r.p95,1)}`) + (r.extra ?? "")));
+    hit.addEventListener("pointerleave", ocultar);
+  });
+}
+const tabla = (id, cab, filas) => { $(id).innerHTML = `<table><thead><tr>${cab.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>` +
+  filas.map(f => `<tr>${f.map(c => `<td>${c}</td>`).join("")}</tr>`).join("") + "</tbody></table>"; };
+let sexoMC = "H", sexoESG = "H";
+function gMC(){
+  const t = [...D.montecarlo[sexoMC]].sort((a,b) => a.mediana - b.mediana);
+  const base = med(t, "Por defecto (ley)");
+  rangos("g-mc", t.map(r => ({...r, nombre:nombreEstr(r.estrategia), color:colorEstr(r.estrategia), destacar:!r.estrategia.startsWith("Fondo"),
+    extra: fila(null,"vs por defecto", pctS(r.mediana/base-1)) + fila(null,"Prob. tasa de reemplazo ≥ 40%", pct(r.prob_tr_meta))})));
+  tabla("t-mc", ["Estrategia","P5","P25","Mediana","P75","P95","Prob. TR ≥ 40%"],
+    t.map(r => [nombreEstr(r.estrategia), nf(r.p5,1), nf(r.p25,1), nf(r.mediana,1), nf(r.p75,1), nf(r.p95,1), pct(r.prob_tr_meta)]));
+  const cv = med(t,"Ciclo de vida (aprox. FG)"), re = med(t,"Reactivo (market timing)");
+  $("lectura-estrategias").textContent = `Si se repite la historia, el ciclo de vida deja una mediana de ${nf(cv,1)} UF al mes, ${pctS(cv/base-1)} frente al fondo por defecto (${nf(base,1)} UF). ` +
+    `Cambiarse al E después de cada caída deja ${nf(re,1)} UF. Todas las estrategias se evalúan sobre las mismas 10.000 trayectorias.`;
+}
+function gESG(){
+  const P = D.escenarios_pensiones.filter(r => r.sexo === sexoESG && (r.estrategia === "Por defecto (ley)" || r.estrategia === "Ciclo de vida (aprox. FG)"));
+  const escen = [...new Set(P.map(r => r.escenario))], filas = [];
+  escen.forEach((e, k) => { const res = D.escenarios_mercado.find(r => r.escenario === e && r.sexo === sexoESG);
+    ["Por defecto (ley)","Ciclo de vida (aprox. FG)"].forEach((n, j) => { const r = P.find(p => p.escenario === e && p.estrategia === n);
+      filas.push({...r, nombre:j ? "Ciclo de vida" : "Por defecto", color:CE[n], grupo:j ? null : e, salto:k*26 + 12,
+        extra: j ? fila(null,"vs por defecto", pctS(res.cv_vs_defecto_mediana)) + fila(null,"Gana en", pct(res.prob_cv_supera_defecto) + " de los escenarios") : ""}); }); });
+  rangos("g-esg", filas, {alto: filas.length*34 + escen.length*26 + 44});
+  tabla("t-esg", ["Escenario","Fondo A real/año","Fondo E real/año","CV vs defecto (mediana)","CV vs defecto (P5)","CV gana en","Reactivo vs defecto"],
+    D.escenarios_mercado.filter(r => r.sexo === sexoESG).map(r => [r.escenario, r.retorno_real_A == null ? "histórico" : pct(r.retorno_real_A,1),
+      r.retorno_real_E == null ? "histórico" : pct(r.retorno_real_E,1), pctS(r.cv_vs_defecto_mediana), pctS(r.cv_vs_defecto_p5), pct(r.prob_cv_supera_defecto), pctS(r.reactivo_vs_defecto_mediana,1)]));
+}
+$("lectura-esg").textContent = `El fondo por defecto casi no cambia entre escenarios porque ya invierte en fondos intermedios. El ciclo de vida sí: ` +
+  `con la historia gana ${pctS(hist.cv_vs_defecto_mediana)}, con el consenso 2026 (Fondo A ${pct(cons.retorno_real_A,1)} y E ${pct(cons.retorno_real_E,1)} real al año) gana ${pctS(cons.cv_vs_defecto_mediana)}, ` +
+  `y su peor 5% queda ${pctS(cons.cv_vs_defecto_p5)} frente al por defecto.`;
+
+/* ---------- 4. incertidumbre ---------- */
+function gInc(){
+  const alto = 380, [s, w] = lienzo("g-inc", alto), m = {l:52, r:16, t:14, b:40};
+  const X = inc.prima_real_A_vs_E, Y = inc.cv_vs_defecto_mediana;
+  const x = lin(Math.min(...X)-.005, Math.max(...X)+.005, m.l, w-m.r), y = lin(Math.min(...Y,-.05)-.05, Math.max(...Y)+.05, alto-m.b, m.t);
+  const gt = el("g", {class:"tick"}, s);
+  for (const v of ticks(y.inv(alto-m.b), y.inv(m.t), 6)){ el("line", {x1:m.l, x2:w-m.r, y1:y(v), y2:y(v), style:"stroke:var(--grilla)"}, gt);
+    el("text", {x:m.l-6, y:y(v)+4, "text-anchor":"end"}, gt).textContent = pctS(v); }
+  for (const v of ticks(x.inv(m.l), x.inv(w-m.r), w < 560 ? 5 : 8)) el("text", {x:x(v), y:alto-m.b+16, "text-anchor":"middle"}, gt).textContent = pctS(v);
+  el("text", {x:(m.l+w-m.r)/2, y:alto-6, "text-anchor":"middle"}, s).textContent = "Prima real anual del Fondo A sobre el E en la historia remuestreada";
+  el("line", {x1:m.l, x2:w-m.r, y1:y(0), y2:y(0), style:"stroke:var(--tinta2)"}, s);
+  el("line", {x1:x(0), x2:x(0), y1:m.t, y2:alto-m.b, style:"stroke:var(--tinta2)"}, s);
+  const pc = cons.retorno_real_A - cons.retorno_real_E;
+  el("line", {x1:x(pc), x2:x(pc), y1:m.t, y2:alto-m.b, style:"stroke:var(--sCV);stroke-dasharray:4 3"}, s);
+  el("text", {x:x(pc)+6, y:m.t+12}, s).textContent = `prima de consenso 2026: ${pctS(pc,1)}`;
+  X.forEach((v, i) => { const c = Y[i] > 0 ? "--sCV" : "--sRe";
+    const p = el("circle", {cx:x(v), cy:y(Y[i]), r:4.5, class:"marca", style:`fill:var(${c});fill-opacity:.8;stroke:var(--sup);stroke-width:1.2`}, s);
+    p.addEventListener("pointermove", ev => tip(ev, `<div class="t">Historia ${i+1}</div>` + fila(null,"Prima A − E", pctS(v,1)) +
+      fila(c, "Ciclo de vida vs por defecto", pctS(Y[i])) + fila(null,"Reactivo vs por defecto", pctS(inc.reactivo_vs_defecto_mediana[i],1))));
+    p.addEventListener("pointerleave", ocultar); });
+}
+const q = (a, p) => { const b = [...a].sort((u,v) => u-v), i = (b.length-1)*p, lo = Math.floor(i); return b[lo] + (b[Math.ceil(i)]-b[lo])*(i-lo); };
+$("lectura-inc").textContent = `En ${inc.cv_vs_defecto_mediana.length} historias alternativas la ventaja del ciclo de vida va de ${pctS(q(inc.cv_vs_defecto_mediana,.05))} a ` +
+  `${pctS(q(inc.cv_vs_defecto_mediana,.95))} (intervalo de 90%) y sigue casi una recta con la prima de la renta variable. Gana en ${pct(gana)} de las historias; pierde solo cuando la prima es negativa.`;
+
+/* ---------- 5. robustez ---------- */
+function gRob(){
+  const R = D.robustez, alto = R.length*27 + 34, [s, w] = lienzo("g-rob", alto);
+  const etiq = Math.min(210, w*0.46), m = {l:etiq, r:40, t:8, b:24};
+  const vals = R.flatMap(r => [r.cv_vs_defecto_mediana, r.reactivo_vs_defecto_mediana]);
+  const x = lin(Math.min(0,...vals)-.02, Math.max(...vals)+.04, m.l, w-m.r);
+  const gt = el("g", {class:"tick"}, s);
+  for (const v of ticks(x.inv(m.l), x.inv(w-m.r), 5)){ el("line", {x1:x(v), x2:x(v), y1:m.t, y2:alto-m.b, style:"stroke:var(--grilla)"}, gt);
+    el("text", {x:x(v), y:alto-6, "text-anchor":"middle"}, gt).textContent = pctS(v); }
+  el("line", {x1:x(0), x2:x(0), y1:m.t, y2:alto-m.b, style:"stroke:var(--tinta2)"}, s);
+  R.forEach((r, i) => { const yc = m.t + 12 + i*27;
+    el("text", {x:m.l-8, y:yc+4, "text-anchor":"end", style:"font-size:11px"}, s).textContent = r.caso;
+    el("line", {x1:x(r.reactivo_vs_defecto_mediana), x2:x(r.cv_vs_defecto_mediana), y1:yc, y2:yc, style:"stroke:var(--grilla);stroke-width:2"}, s);
+    for (const [k, c] of [["cv_vs_defecto_mediana","--sCV"],["reactivo_vs_defecto_mediana","--sRe"]])
+      el("circle", {cx:x(r[k]), cy:yc, r:5, style:`fill:var(${c});stroke:var(--sup);stroke-width:1.5`}, s);
+    const hit = el("rect", {x:0, y:yc-13, width:w, height:26, fill:"transparent"}, s);
+    hit.addEventListener("pointermove", ev => tip(ev, `<div class="t">${r.caso}</div>` + fila("--sCV","Ciclo de vida", pctS(r.cv_vs_defecto_mediana)) +
+      fila("--sRe","Reactivo", pctS(r.reactivo_vs_defecto_mediana,1)) + fila(null,"CV gana en", pct(r.prob_cv_supera_defecto))));
+    hit.addEventListener("pointerleave", ocultar); });
+}
+
+/* ---------- 6. bandas ---------- */
+const B = D.bandas;
+$("lectura-bandas").textContent = `El 95% de las desviaciones históricas entre AFP es menor a ${nf(B.p95*100,2)} p.p., mientras las bandas oficiales van de ±${nf(B.permanente[0]*100,1)} a ±${nf(B.permanente[1]*100,1)} p.p. (±${nf(B.transicion*100,1)} en la transición). ` +
+  `El incentivo dependerá de cuánto se aleje la cartera de referencia de lo que hoy invierten las AFP.`;
+function gBandas(){
+  const alto = 300, [s, w] = lienzo("g-bandas", alto), m = {l:44, r:12, t:30, b:30};
+  const n = B.hist.length, x = lin(B.x0, B.x0 + n*B.ancho_bin, m.l, w-m.r), ymax = Math.max(...B.hist), y = lin(0, ymax*1.05, alto-m.b, m.t);
+  ejeY(s, y, ticks(0, ymax, 4), m.l, w-m.r, v => nf(v,0));
+  for (const sg of [-1,1]){ el("rect", {x:Math.min(x(sg*B.permanente[0]*100), x(sg*B.permanente[1]*100)), y:m.t, width:Math.abs(x(B.permanente[1]*100)-x(B.permanente[0]*100)),
+      height:alto-m.b-m.t, style:"fill:var(--sRe);fill-opacity:.14"}, s);
+    el("line", {x1:x(sg*B.transicion*100), x2:x(sg*B.transicion*100), y1:m.t, y2:alto-m.b, style:"stroke:var(--tinta2);stroke-dasharray:4 3"}, s); }
+  el("text", {x:x(B.permanente[1]*100)+4, y:m.t-8}, s).textContent = "banda permanente";
+  el("text", {x:x(B.transicion*100)-4, y:m.t-8, "text-anchor":"end"}, s).textContent = "transición";
+  B.hist.forEach((v, i) => { if (!v) return; const x0 = x(B.x0 + i*B.ancho_bin);
+    const r = el("rect", {x:x0+1, y:y(v), width:Math.max(x(B.x0+(i+1)*B.ancho_bin)-x0-2, 1), height:y(0)-y(v), style:"fill:var(--fA)", class:"marca"}, s);
+    r.addEventListener("pointermove", ev => tip(ev, fila(null, `${nf(B.x0+i*B.ancho_bin,1)} a ${nf(B.x0+(i+1)*B.ancho_bin,1)} p.p.`, `${v} AFP-meses`)));
+    r.addEventListener("pointerleave", ocultar); });
+  const gx = el("g", {class:"tick"}, s); for (const v of [-4,-3,-2,-1,0,1,2,3,4]) el("text", {x:x(v), y:alto-10, "text-anchor":"middle"}, gx).textContent = pctS(v/100);
+}
+
+/* ---------- controles y render ---------- */
+function alternar(pref, valor, fn){ for (const k of ["H","M"]) $(`${pref}-${k}`).setAttribute("aria-pressed", String(k === valor)); fn(); }
+$("mc-H").onclick = () => { sexoMC = "H"; alternar("mc","H",gMC); }; $("mc-M").onclick = () => { sexoMC = "M"; alternar("mc","M",gMC); };
+$("esg-H").onclick = () => { sexoESG = "H"; alternar("esg","H",gESG); }; $("esg-M").onclick = () => { sexoESG = "M"; alternar("esg","M",gESG); };
+const todo = () => { gMercado(); gGlide(); gMC(); gESG(); gInc(); gRob(); gBandas(); };
+todo(); let t0; addEventListener("resize", () => { clearTimeout(t0); t0 = setTimeout(todo, 150); });
+})();
+</script>

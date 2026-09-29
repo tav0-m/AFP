@@ -1,0 +1,553 @@
+<title>Laboratorio de Pensiones AFP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Libre+Franklin:wght@600;700;800&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#eef2f4; --card:#fbfcfc; --ink:#13202a; --ink2:#44545f; --muted:#687985; --line:#d6dee3; --grid:#e3e8eb;
+  --accent:#0e5a63; --accent-ink:#ffffff; --accent-soft:#dcebec; --band:#e34948;
+  --fA:#2a78d6; --fB:#eb6834; --fC:#1baf7a; --fD:#eda100; --fE:#e87ba4;
+  --sDef:#008300; --sCV:#4a3aa7; --sRe:#e34948; --good:#0a7d0a; --bad:#c23434;
+  --shade-crisis:rgba(227,73,72,.16); --shade-tasas:rgba(237,161,0,.16);
+  --display:"Libre Franklin",ui-sans-serif,system-ui,sans-serif;
+  --body:"Public Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#0f151a; --card:#172028; --ink:#e8eef2; --ink2:#b6c3cc; --muted:#8c9ba6; --line:#2b3741; --grid:#24303a;
+  --accent:#5bbcc3; --accent-ink:#0b1216; --accent-soft:#1d3237; --band:#e66767;
+  --fA:#3987e5; --fB:#d95926; --fC:#199e70; --fD:#c98500; --fE:#d55181;
+  --sDef:#008300; --sCV:#9085e9; --sRe:#e66767; --good:#3fbf3f; --bad:#e66767;
+  --shade-crisis:rgba(230,103,103,.18); --shade-tasas:rgba(201,133,0,.2);
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0f151a; --card:#172028; --ink:#e8eef2; --ink2:#b6c3cc; --muted:#8c9ba6; --line:#2b3741; --grid:#24303a;
+  --accent:#5bbcc3; --accent-ink:#0b1216; --accent-soft:#1d3237; --band:#e66767;
+  --fA:#3987e5; --fB:#d95926; --fC:#199e70; --fD:#c98500; --fE:#d55181;
+  --sDef:#008300; --sCV:#9085e9; --sRe:#e66767; --good:#3fbf3f; --bad:#e66767;
+  --shade-crisis:rgba(230,103,103,.18); --shade-tasas:rgba(201,133,0,.2);
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--body);margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:20px;padding-block:28px 56px;display:grid;gap:44px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(28px,4.2vw,44px);font-weight:800;letter-spacing:-.01em}
+h2{font-size:24px;font-weight:700}
+h3{font-size:16px;font-weight:700}
+p{margin:0;max-width:68ch}
+.eyebrow{font:600 12px/1 var(--body);letter-spacing:.09em;text-transform:uppercase;color:var(--accent)}
+.lead{color:var(--ink2);font-size:17px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+header{display:grid;gap:14px}
+.sello{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--muted);padding-top:6px;border-top:1px solid var(--line)}
+.sello b{color:var(--ink2);font-weight:600}
+section{display:grid;gap:18px}
+.sec-head{display:grid;gap:6px}
+/* simulador */
+.sim{display:grid;grid-template-columns:300px 1fr;gap:22px;align-items:start}
+.wrap>*,section>*,.sim>*,.resultados>*,.graficos>*,.panel,.fig{min-width:0}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px}
+form{display:grid;gap:14px}
+.campo{display:grid;gap:5px}
+.campo label,.campo .lbl{font-size:13px;font-weight:600;color:var(--ink2)}
+.campo small{font-size:12px;color:var(--muted)}
+input[type=number],select{font:15px var(--mono);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%}
+select{font-family:var(--body)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.fila2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{font:600 14px var(--body);padding:8px;border:0;background:var(--bg);color:var(--ink2);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.nota-ej{font-size:12px;color:var(--muted);border-left:3px solid var(--accent-soft);padding-left:8px}
+.resultados{display:grid;gap:16px}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:4px;align-content:start}
+.tile .k{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.03em}
+.tile .v{font:500 24px/1.1 var(--mono);font-variant-numeric:tabular-nums}
+.tile .s{font-size:12.5px;color:var(--ink2)}
+.tile.destacado{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.comparacion{font-size:14px;color:var(--ink2);background:var(--accent-soft);border-radius:8px;padding:10px 14px}
+.sube{color:var(--good);font-weight:600}.baja{color:var(--bad);font-weight:600}
+.chart{position:relative;width:100%}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{fill:var(--muted);font:11.5px var(--body)}
+.chart .lbl-dir{fill:var(--ink);font-weight:600}
+.tt{position:absolute;pointer-events:none;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:12.5px;box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:150px;z-index:5}
+.tt .t{font-weight:600;margin-bottom:4px}
+.tt .r{display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.tabla-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:12px;letter-spacing:.02em}
+td{font-family:var(--mono);font-variant-numeric:tabular-nums}
+td:first-child{font-family:var(--body)}
+tr.sel td{background:var(--accent-soft);font-weight:600}
+/* hallazgos */
+.hallazgos{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:1100px){.hallazgos{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.hallazgos{grid-template-columns:1fr}}
+.hallazgo{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:8px;align-content:start}
+.hallazgo p{font-size:14px;color:var(--ink2)}
+.graficos{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.graficos .ancho{grid-column:1/-1}
+.fig{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:10px;align-content:start}
+.fig p{font-size:13.5px;color:var(--ink2)}
+.leyenda{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--ink2)}
+.toggle{display:inline-grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:6px;overflow:hidden;justify-self:start}
+.toggle button{font:600 13px var(--body);padding:5px 12px;border:0;background:var(--bg);color:var(--ink2);cursor:pointer}
+.toggle button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.metodo{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.metodo div{display:grid;gap:6px;align-content:start}
+.metodo p,.metodo li{font-size:14px;color:var(--ink2)}
+.metodo ul{margin:0;padding-left:18px;display:grid;gap:4px}
+a{color:var(--accent)}
+footer{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;display:grid;gap:4px}
+.error{color:var(--bad);font-size:13px}
+@media (max-width:900px){.sim{grid-template-columns:1fr}.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.graficos{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header>
+  <span class="eyebrow">Laboratorio de pensiones · Chile 2002–2026</span>
+  <h1>¿Cuánto cambia tu pensión según cómo inviertes tu ahorro?</h1>
+  <p class="lead">Un simulador construido con 24 años de valores cuota oficiales, las tablas de mortalidad de la CMF y un modelo de regímenes de mercado. Mismos escenarios para cada estrategia, para que la comparación sea justa.</p>
+  <div class="sello" id="sello"></div>
+</header>
+
+<section aria-labelledby="t-sim">
+  <div class="sec-head">
+    <span class="eyebrow">Simulador</span>
+    <h2 id="t-sim">Proyecta tu pensión en 2.000 futuros posibles</h2>
+  </div>
+  <div class="sim">
+    <div class="panel">
+      <form id="form" novalidate>
+        <div class="campo"><span class="lbl">Sexo</span>
+          <div class="seg" role="group" aria-label="Sexo">
+            <button type="button" id="sexoH" aria-pressed="true">Hombre</button>
+            <button type="button" id="sexoM" aria-pressed="false">Mujer</button>
+          </div>
+          <small>Define la tabla de mortalidad (CB-H-2020 o RV-M-2020) y la edad legal.</small>
+        </div>
+        <div class="fila2">
+          <div class="campo"><label for="edad">Edad actual</label><input id="edad" type="number" min="18" max="64" value="35"></div>
+          <div class="campo"><label for="retiro">Edad de pensión</label><input id="retiro" type="number" min="55" max="75" value="65"></div>
+        </div>
+        <div class="fila2">
+          <div class="campo"><label for="saldo">Saldo hoy (UF)</label><input id="saldo" type="number" min="0" step="10" value="400"></div>
+          <div class="campo"><label for="sueldo">Sueldo imponible (UF)</label><input id="sueldo" type="number" min="1" step="1" value="30"></div>
+        </div>
+        <small id="equivalente" class="nota-ej"></small>
+        <div class="fila2">
+          <div class="campo"><label for="tasa">Cotización (%)</label><input id="tasa" type="number" min="5" max="25" step="0.5" value="10"></div>
+          <div class="campo"><label for="dens">Densidad (%)</label><input id="dens" type="number" min="10" max="100" step="5" value="60"></div>
+        </div>
+        <small>Densidad: fracción de los meses en que cotizas. En Chile ronda el 50–60%.</small>
+        <div class="campo"><label for="estrategia">Estrategia de inversión</label><select id="estrategia"></select></div>
+        <div class="campo"><label for="escenario">Mercado futuro</label>
+          <select id="escenario">
+            <option value="0">Histórico 2002–2026, por régimen</option>
+            <option value="0.01">Conservador: −1 punto al año</option>
+          </select>
+        </div>
+        <p class="nota-ej">Viene cargado un ejemplo: hombre de 35 años con 400 UF ahorradas y sueldo de 30 UF. Cambia cualquier dato y el resultado se recalcula.</p>
+        <p class="error" id="error" hidden></p>
+      </form>
+    </div>
+    <div class="resultados">
+      <div class="tiles" id="tiles"></div>
+      <div class="comparacion" id="comparacion"></div>
+      <div class="panel">
+        <h3>Saldo proyectado de tu cuenta por edad (UF de hoy)</h3>
+        <div class="chart" id="fan"></div>
+        <div class="leyenda" id="fan-ley"></div>
+      </div>
+      <div class="panel">
+        <h3>Todas las estrategias con tus datos y los mismos escenarios</h3>
+        <div class="tabla-wrap"><table id="ranking"></table></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="t-hall">
+  <div class="sec-head">
+    <span class="eyebrow">Lo que muestran los datos</span>
+    <h2 id="t-hall">Ocho hallazgos sobre 24 años de multifondos</h2>
+  </div>
+  <div class="hallazgos" id="hallazgos"></div>
+  <div class="graficos">
+    <div class="fig ancho">
+      <h3>Valor real (en UF) de cada fondo del sistema, base 100 en agosto de 2002</h3>
+      <div class="leyenda" id="ley-indice"></div>
+      <div class="chart" id="g-indice"></div>
+      <p>Escala logarítmica. Las franjas marcan los regímenes que detecta el modelo oculto de Markov: crisis bursátiles cortas y, desde mayo de 2019, un régimen de tasas volátiles en el que el Fondo E dejó de comportarse como refugio.</p>
+    </div>
+    <div class="fig">
+      <h3>Pensión del afiliado tipo por estrategia</h3>
+      <div class="toggle" role="group" aria-label="Sexo del afiliado tipo">
+        <button type="button" id="mcH" aria-pressed="true">Hombre</button><button type="button" id="mcM" aria-pressed="false">Mujer</button>
+      </div>
+      <div class="chart" id="g-mc"></div>
+      <p>Inicia a los 25 años con 25 UF de sueldo, 10% de cotización y 60% de densidad. Línea fina: percentiles 5 a 95; barra: 25 a 75; círculo: mediana. 10.000 escenarios.</p>
+    </div>
+    <div class="fig">
+      <h3>¿Cuánto se desvían las AFP de sus pares?</h3>
+      <div class="chart" id="g-bandas"></div>
+      <p id="txt-bandas"></p>
+    </div>
+    <div class="fig ancho">
+      <h3>La historia real: un afiliado que cotizó de 2002 a 2026</h3>
+      <div class="toggle" role="group" aria-label="Sexo en la historia real">
+        <button type="button" id="btH" aria-pressed="true">Hombre (41 a 65)</button><button type="button" id="btM" aria-pressed="false">Mujer (36 a 60)</button>
+      </div>
+      <div class="tabla-wrap"><table id="backtest"></table></div>
+      <p>Un solo camino histórico sirve como evidencia, pero no como probabilidad: la regla reactiva salió neutra aquí y pierde en la mayoría de los 10.000 escenarios.</p>
+    </div>
+    <div class="fig ancho">
+      <h3>¿Resisten las conclusiones otros supuestos?</h3>
+      <div class="tabla-wrap"><table id="robustez"></table></div>
+      <p>Cada fila vuelve a simular 10.000 escenarios con un supuesto distinto. "Gana en" y "pierde en" cuentan los escenarios en que, sobre la misma trayectoria del mercado, la estrategia supera o queda bajo el fondo por defecto.</p>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="t-met">
+  <div class="sec-head">
+    <span class="eyebrow">Cómo está hecho</span>
+    <h2 id="t-met">Metodología, supuestos y fuentes</h2>
+  </div>
+  <div class="metodo">
+    <div><h3>Datos</h3><ul>
+      <li>Valores cuota diarios por AFP y fondo, 2002–2026 (Superintendencia de Pensiones), con detección de fusiones.</li>
+      <li>UF diaria (Banco Central) para expresar todo en términos reales.</li>
+      <li>Afiliados por AFP (SP) para ponderar el sistema.</li>
+      <li>Tablas de mortalidad CB-H-2020 y RV-M-2020 (CMF, NCG 495).</li></ul></div>
+    <div><h3>Modelos</h3><ul>
+      <li>Modelo oculto de Markov de 3 regímenes (elegido por BIC) y GARCH(1,1), implementados desde cero.</li>
+      <li>Escenarios: se sortean meses históricos completos del mismo régimen, que avanza según la matriz de transición estimada.</li>
+      <li>Pensión = saldo ÷ capital necesario unitario, con la tasa de retiro programado vigente.</li></ul></div>
+    <div><h3>Límites</h3><ul>
+      <li>El ciclo de vida sigue el límite oficial de activos de crecimiento por edad (95% hasta los 38, piso de 29% a los 63), replicado con multifondos.</li>
+      <li>Es la pensión autofinanciada: sin PGU ni beneficiarios de sobrevivencia.</li>
+      <li>El futuro no tiene por qué parecerse a 2002–2026; usa el escenario conservador para acotarlo.</li></ul></div>
+  </div>
+</section>
+
+<footer>
+  <span>Proyecto educativo y de investigación. No es asesoría previsional ni financiera; para decisiones personales consulta a un asesor previsional.</span>
+  <span>Fuentes: <a href="https://www.spensiones.cl" rel="noopener">Superintendencia de Pensiones</a> · <a href="https://si3.bcentral.cl" rel="noopener">Banco Central de Chile</a> · <a href="https://www.cmfchile.cl" rel="noopener">CMF</a> · Régimen de inversión de Fondos Generacionales (SP, Res. Ex. 1195, 2026).</span>
+</footer>
+</div>
+
+<script id="datos" type="application/json">__DATOS__</script>
+<script>
+(() => {
+"use strict";
+const D = JSON.parse(document.getElementById("datos").textContent);
+const FONDOS = ["A","B","C","D","E"];
+const nf = (x, d=1) => new Intl.NumberFormat("es-CL",{minimumFractionDigits:d,maximumFractionDigits:d}).format(x);
+const clp = x => "$" + new Intl.NumberFormat("es-CL",{maximumFractionDigits:0}).format(x);
+const pct = (x, d=0) => nf(x*100, d) + "%";
+const $ = id => document.getElementById(id);
+const COLOR = {"Fondo A fijo":"--fA","Fondo B fijo":"--fB","Fondo C fijo":"--fC","Fondo D fijo":"--fD","Fondo E fijo":"--fE",
+  "Por defecto (ley)":"--sDef","Ciclo de vida (aprox. FG)":"--sCV","Reactivo (market timing)":"--sRe"};
+const ESTRATEGIAS = Object.keys(COLOR);
+const svgNS = "http://www.w3.org/2000/svg";
+const el = (tag, attrs={}, parent) => { const e = document.createElementNS(svgNS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+
+/* ---------- sello de datos ---------- */
+$("sello").innerHTML = `<span>Valores cuota: <b>${D.rango}</b></span><span>UF: <b class="num">${clp(D.uf)}</b> (${D.uf_fecha})</span>`+
+  `<span>Tasa de retiro programado: <b class="num">${nf(D.titrp*100,2)}%</b></span><span>Modelo actualizado: <b>${D.generado}</b></span>`;
+
+/* ---------- motor: mortalidad y CNU ---------- */
+function qx(edad, anio, sexo){
+  const M = D.mortalidad[sexo]; const i = M.edades.indexOf(edad);
+  if (edad > M.edades[M.edades.length-1]) return 1;
+  const fila = M.qx[i < 0 ? 0 : i]; const j = Math.min(Math.max(anio - M.anio0, 0), fila.length-1);
+  return fila[j];
+}
+function cnu(edad, sexo, anio, tasa=D.titrp){
+  const im = Math.pow(1+tasa, 1/12) - 1; let s = 1, v = 0, k = 0;
+  for (let x = edad; x <= 110; x++){
+    const qm = 1 - Math.pow(1 - qx(x, anio + x - edad, sexo), 1/12);
+    for (let m = 0; m < 12; m++){ v += s / Math.pow(1+im, k); s *= 1 - qm; k++; }
+  }
+  return v;
+}
+
+/* ---------- motor: escenarios por régimen ---------- */
+const R = D.retornos_mensuales, LAB = D.regimen.etiqueta, A = D.regimen.transicion, K = A.length;
+const POOLS = Array.from({length:K}, (_,k) => LAB.map((l,i)=> l===k ? i : -1).filter(i=>i>=0));
+const CUM = A.map(f => { let c=0; return f.map(p => c += p); });
+function rng(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+function pesos(estr, edad, sexo, retiro){
+  const w = [0,0,0,0,0];
+  if (estr.startsWith("Fondo")) { w[FONDOS.indexOf(estr[6])] = 1; return w; }
+  if (estr === "Ciclo de vida (aprox. FG)") {
+    const g = D.glidepath;                           // pesos precalculados por edad (glidepath oficial SP)
+    return g.pesos[Math.min(Math.max(edad - g.edad_inicial, 0), g.pesos.length - 1)].slice();
+  }
+  const corte = sexo === "H" ? 55 : 50;           // por defecto (ley) y base del reactivo
+  w[edad <= 35 ? 1 : edad <= corte ? 2 : 3] = 1; return w;
+}
+
+function simular(p, n=2000){
+  const T = (p.retiro - p.edad) * 12;
+  const edades = Array.from({length:T}, (_,t) => p.edad + Math.floor(t/12));
+  const aporte = edades.map(e => p.sueldo * Math.pow(1.015, Math.max(0, Math.min(e,50) - Math.min(p.edad,50))) * p.tasa * p.dens);
+  const sueldoFinal = p.sueldo * Math.pow(1.015, Math.max(0, Math.min(p.retiro-1,50) - Math.min(p.edad,50)));
+  const W = {}; for (const e of ESTRATEGIAS) W[e] = edades.map(x => pesos(e, x, p.sexo, p.retiro));
+  const hc = Math.pow(1 - p.castigo, 1/12);
+  const anios = p.retiro - p.edad, factor = cnu(p.retiro, p.sexo, 2026 + anios);
+  const res = {}; for (const e of ESTRATEGIAS) res[e] = new Float64Array(n);
+  const fan = Array.from({length: anios+1}, () => new Float64Array(n));
+  const rnd = rng(20260927 + p.edad*101 + p.retiro*7 + (p.sexo==="M"?5:0));
+  const idx = new Int32Array(T); const RE = D.reactivo;
+  for (let s = 0; s < n; s++){
+    let reg = LAB[LAB.length-1];
+    for (let t = 0; t < T; t++){
+      const pool = POOLS[reg]; idx[t] = pool[Math.floor(rnd()*pool.length)];
+      const u = rnd(); let nx = 0; while (nx < K-1 && u > CUM[reg][nx]) nx++; reg = nx;
+    }
+    for (const e of ESTRATEGIAS){
+      let S = p.saldo; const w = W[e]; const sel = e === p.estrategia;
+      if (sel) fan[0][s] = S;
+      if (e === "Reactivo (market timing)"){
+        let enE = false, mesesE = 0, pend = 0, espera = 0; const hp = [0,0,0], ha = [0,0,0];
+        for (let t = 0; t < T; t++){
+          if (pend && espera === 0){ enE = pend === 1; if (enE) mesesE = 0; pend = 0; }
+          if (espera > 0) espera--;
+          const r = R[idx[t]]; const wt = w[t];
+          let rb = 0; for (let f = 0; f < 5; f++) rb += wt[f]*r[f];
+          let rp = enE ? r[4] : rb; rp = (1+rp)*hc - 1;
+          S = (S + aporte[t]) * (1 + rp);
+          hp.shift(); hp.push(rp); ha.shift(); ha.push((1+r[0])*hc-1); if (enE) mesesE++;
+          if (t >= 2 && pend === 0){
+            const c3 = (1+hp[0])*(1+hp[1])*(1+hp[2]) - 1, a3 = (1+ha[0])*(1+ha[1])*(1+ha[2]) - 1;
+            if (!enE && c3 < RE.umbral_caida_3m){ pend = 1; espera = RE.desfase_meses; }
+            else if (enE && mesesE >= RE.meses_minimos_en_E && a3 > RE.umbral_recuperacion_3m){ pend = 2; espera = RE.desfase_meses; }
+          }
+          if (sel && (t+1) % 12 === 0) fan[(t+1)/12][s] = S;
+        }
+      } else {
+        for (let t = 0; t < T; t++){
+          const r = R[idx[t]], wt = w[t]; let rp = 0; for (let f = 0; f < 5; f++) rp += wt[f]*r[f];
+          S = (S + aporte[t]) * ((1+rp)*hc);
+          if (sel && (t+1) % 12 === 0) fan[(t+1)/12][s] = S;
+        }
+      }
+      res[e][s] = S / factor;
+    }
+  }
+  return {res, fan, factor, sueldoFinal, anios};
+}
+const q = (arr, p) => { const a = Float64Array.from(arr).sort(); const i = (a.length-1)*p, lo = Math.floor(i);
+  return a[lo] + (a[Math.min(lo+1,a.length-1)] - a[lo]) * (i - lo); };
+
+/* ---------- formulario ---------- */
+let sexo = "H";
+const sel = $("estrategia");
+for (const e of ESTRATEGIAS){ const o = document.createElement("option"); o.value = e; o.textContent = e; sel.appendChild(o); }
+sel.value = "Por defecto (ley)";
+function setSexo(s){ sexo = s; $("sexoH").setAttribute("aria-pressed", s==="H"); $("sexoM").setAttribute("aria-pressed", s==="M");
+  $("retiro").value = D.edad_legal[s]; programar(); }
+$("sexoH").onclick = () => setSexo("H"); $("sexoM").onclick = () => setSexo("M");
+let timer; function programar(){ clearTimeout(timer); timer = setTimeout(correr, 180); }
+$("form").addEventListener("input", programar);
+$("form").addEventListener("submit", e => e.preventDefault());
+
+function leer(){
+  const v = id => parseFloat($(id).value);
+  const p = {sexo, edad: Math.round(v("edad")), retiro: Math.round(v("retiro")), saldo: v("saldo"), sueldo: v("sueldo"),
+    tasa: v("tasa")/100, dens: v("dens")/100, estrategia: sel.value, castigo: parseFloat($("escenario").value)};
+  const err = [];
+  if (!(p.edad >= 18 && p.edad <= 64)) err.push("La edad actual debe estar entre 18 y 64 años.");
+  if (!(p.retiro > p.edad && p.retiro <= 75)) err.push("La edad de pensión debe ser mayor que la edad actual y como máximo 75.");
+  if (!(p.saldo >= 0)) err.push("El saldo no puede ser negativo.");
+  if (!(p.sueldo > 0)) err.push("Ingresa un sueldo mayor que cero.");
+  if (!(p.tasa > 0 && p.dens > 0)) err.push("La cotización y la densidad deben ser mayores que cero.");
+  return {p, err};
+}
+
+function correr(){
+  const {p, err} = leer();
+  $("equivalente").textContent = p.sueldo > 0 ? `${nf(p.sueldo,0)} UF ≈ ${clp(p.sueldo*D.uf)} mensuales de hoy.` : "";
+  $("error").hidden = !err.length; $("error").textContent = err.join(" ");
+  if (err.length) return;
+  const out = simular(p);
+  const x = out.res[p.estrategia], base = out.res["Por defecto (ley)"];
+  const med = q(x,.5), p5 = q(x,.05), p95 = q(x,.95);
+  const tr = med / out.sueldoFinal; let meta = 0; for (const v of x) if (v/out.sueldoFinal >= .4) meta++;
+  $("tiles").innerHTML = `
+    <div class="tile destacado"><span class="k">PENSIÓN MEDIANA</span><span class="v">${nf(med)} UF</span><span class="s">${clp(med*D.uf)} al mes, en pesos de hoy</span></div>
+    <div class="tile"><span class="k">RANGO PROBABLE (90%)</span><span class="v">${nf(p5)}–${nf(p95)}</span><span class="s">UF al mes, percentiles 5 y 95</span></div>
+    <div class="tile"><span class="k">TASA DE REEMPLAZO</span><span class="v">${pct(tr)}</span><span class="s">de tu último sueldo (${nf(out.sueldoFinal,0)} UF)</span></div>
+    <div class="tile"><span class="k">PROB. DE LLEGAR AL 40%</span><span class="v">${pct(meta/x.length)}</span><span class="s">de los escenarios</span></div>`;
+  if (p.estrategia === "Por defecto (ley)"){
+    const cv = out.res["Ciclo de vida (aprox. FG)"]; const d = q(cv,.5)/med - 1;
+    $("comparacion").innerHTML = `Estás en el fondo por defecto. Con los mismos escenarios, un fondo de ciclo de vida te daría una mediana <span class="${d>=0?"sube":"baja"}">${d>=0?"▲":"▼"} ${pct(Math.abs(d),1)} ${d>=0?"mayor":"menor"}</span>.`;
+  } else {
+    const dm = med/q(base,.5) - 1, dp = p5/q(base,.05) - 1;
+    const f = v => `<span class="${v>=0?"sube":"baja"}">${v>=0?"▲":"▼"} ${pct(Math.abs(v),1)} ${v>=0?"más":"menos"}</span>`;
+    $("comparacion").innerHTML = `Frente al fondo por defecto de la ley, con los mismos escenarios: ${f(dm)} en la mediana y ${f(dp)} en el escenario pesimista (percentil 5).`;
+  }
+  dibujarFan(out, p);
+  const filas = ESTRATEGIAS.map(e => ({e, med:q(out.res[e],.5), p5:q(out.res[e],.05), p95:q(out.res[e],.95)})).sort((a,b)=>b.med-a.med);
+  const bm = q(base,.5);
+  $("ranking").innerHTML = `<thead><tr><th>Estrategia</th><th>Mediana (UF)</th><th>Pesimista P5</th><th>Optimista P95</th><th>Mediana vs por defecto</th></tr></thead><tbody>` +
+    filas.map(f => `<tr class="${f.e===p.estrategia?"sel":""}"><td><span class="sw" style="background:var(${COLOR[f.e]})"></span>${f.e}</td><td>${nf(f.med)}</td><td>${nf(f.p5)}</td><td>${nf(f.p95)}</td><td>${f.e==="Por defecto (ley)"?"—":(f.med/bm-1>=0?"+":"−")+pct(Math.abs(f.med/bm-1),1)}</td></tr>`).join("") + `</tbody>`;
+}
+
+/* ---------- utilidades de gráficos ---------- */
+function lienzo(cont, alto){
+  cont.innerHTML = ""; const w = Math.max(cont.clientWidth, 300);
+  const svg = el("svg", {viewBox:`0 0 ${w} ${alto}`, width:w, height:alto, role:"img"}, cont);
+  const tt = document.createElement("div"); tt.className = "tt"; tt.hidden = true; cont.appendChild(tt);
+  return {svg, w, h:alto, tt};
+}
+function tooltip(tt, cont, x, y, html){
+  tt.innerHTML = html; tt.hidden = false;
+  const cw = cont.clientWidth, tw = tt.offsetWidth;
+  tt.style.left = Math.min(Math.max(x + 14, 0), cw - tw) + "px"; tt.style.top = Math.max(y - 10, 0) + "px";
+}
+const ticks = (lo, hi, n=5) => { const st = Math.pow(10, Math.floor(Math.log10((hi-lo)/n))); const c = [1,2,2.5,5,10].map(m=>m*st).find(s => (hi-lo)/s <= n) || st*10;
+  const out = []; for (let v = Math.ceil(lo/c)*c; v <= hi + 1e-9; v += c) out.push(+v.toFixed(10)); return out; };
+
+/* ---------- abanico de saldo ---------- */
+function dibujarFan(out, p){
+  const cont = $("fan"); const {svg, w, h, tt} = lienzo(cont, 260);
+  const m = {l:52, r:16, t:12, b:30}; const n = out.anios + 1;
+  const bandas = Array.from({length:n}, (_,i) => [.05,.25,.5,.75,.95].map(pp => q(out.fan[i], pp)));
+  const ymax = Math.max(...bandas.map(b => b[4])) * 1.05;
+  const X = i => m.l + (w-m.l-m.r) * i / (n-1), Y = v => h - m.b - (h-m.t-m.b) * v / ymax;
+  for (const v of ticks(0, ymax)) { el("line",{x1:m.l,x2:w-m.r,y1:Y(v),y2:Y(v),style:"stroke:var(--grid)"},svg);
+    el("text",{x:m.l-8,y:Y(v)+4,"text-anchor":"end"},svg).textContent = nf(v,0); }
+  const paso = n > 30 ? 10 : 5;
+  for (let i = 0; i < n; i++) if ((p.edad+i) % paso === 0) el("text",{x:X(i),y:h-10,"text-anchor":"middle"},svg).textContent = p.edad+i;
+  const area = (a,b) => bandas.map((v,i)=>`${i?"L":"M"}${X(i)},${Y(v[a])}`).join("") + bandas.map((v,i)=>i).reverse().map(i=>`L${X(i)},${Y(bandas[i][b])}`).join("") + "Z";
+  const col = `var(${COLOR[p.estrategia]})`;
+  el("path",{d:area(0,4),style:`fill:${col};opacity:.14`},svg);
+  el("path",{d:area(1,3),style:`fill:${col};opacity:.28`},svg);
+  el("path",{d:bandas.map((v,i)=>`${i?"L":"M"}${X(i)},${Y(v[2])}`).join(""),style:`fill:none;stroke:${col};stroke-width:2`},svg);
+  el("circle",{cx:X(n-1),cy:Y(bandas[n-1][2]),r:4,style:`fill:${col}`},svg);
+  const cross = el("line",{y1:m.t,y2:h-m.b,style:"stroke:var(--muted);stroke-dasharray:3 3",visibility:"hidden"},svg);
+  const hit = el("rect",{x:m.l,y:m.t,width:w-m.l-m.r,height:h-m.t-m.b,style:"fill:transparent"},svg);
+  const mover = ev => { const r = svg.getBoundingClientRect(); const i = Math.round((ev.clientX - r.left - m.l) / (w-m.l-m.r) * (n-1));
+    if (i < 0 || i >= n) return; cross.setAttribute("x1",X(i)); cross.setAttribute("x2",X(i)); cross.setAttribute("visibility","visible");
+    const b = bandas[i]; tooltip(tt, cont, X(i), Y(b[2]), `<div class="t">A los ${p.edad+i} años</div>
+      <div class="r"><span>Optimista (P95)</span><span>${nf(b[4],0)} UF</span></div><div class="r"><span>Mediana</span><span>${nf(b[2],0)} UF</span></div>
+      <div class="r"><span>Pesimista (P5)</span><span>${nf(b[0],0)} UF</span></div>`); };
+  hit.addEventListener("pointermove", mover); hit.addEventListener("pointerleave", () => { tt.hidden = true; cross.setAttribute("visibility","hidden"); });
+  $("fan-ley").innerHTML = `<span><span class="sw" style="background:${col};opacity:.5"></span>Percentiles 25–75</span><span><span class="sw" style="background:${col};opacity:.2"></span>Percentiles 5–95</span><span><span class="sw" style="background:${col}"></span>Mediana · ${p.estrategia}</span>`;
+}
+
+/* ---------- hallazgos ---------- */
+$("hallazgos").innerHTML = D.hallazgos.map(h => `<article class="hallazgo"><h3>${h.titulo}</h3><p>${h.detalle}</p></article>`).join("");
+
+/* ---------- índice real con regímenes ---------- */
+function dibujarIndice(){
+  const cont = $("g-indice"); const {svg, w, h, tt} = lienzo(cont, 320);
+  const I = D.indice_mensual, n = I.fechas.length, m = {l:44, r:92, t:10, b:28};
+  const lmin = Math.log(90), lmax = Math.log(420);
+  const X = i => m.l + (w-m.l-m.r) * i/(n-1), Y = v => h - m.b - (h-m.t-m.b) * (Math.log(v)-lmin)/(lmax-lmin);
+  const et = D.regimen.etiqueta, sh = {1:"--shade-tasas", 2:"--shade-crisis"}, dx = (w-m.l-m.r)/(n-1);
+  et.forEach((k,i) => { if (sh[k]) el("rect",{x:X(i)-dx/2,y:m.t,width:dx+.5,height:h-m.t-m.b,style:`fill:var(${sh[k]})`},svg); });
+  for (const v of [100,150,200,300,400]){ el("line",{x1:m.l,x2:w-m.r,y1:Y(v),y2:Y(v),style:"stroke:var(--grid)"},svg);
+    el("text",{x:m.l-6,y:Y(v)+4,"text-anchor":"end"},svg).textContent = v; }
+  I.fechas.forEach((f,i) => { if (f.endsWith("-01") && +f.slice(0,4) % 4 === 0) el("text",{x:X(i),y:h-8,"text-anchor":"middle"},svg).textContent = f.slice(0,4); });
+  const yl = [];
+  for (const f of FONDOS){
+    el("path",{d:I[f].map((v,i)=>`${i?"L":"M"}${X(i)},${Y(v)}`).join(""),style:`fill:none;stroke:var(--f${f});stroke-width:2`},svg);
+    yl.push({f, y:Y(I[f][n-1])});
+  }
+  yl.sort((a,b)=>a.y-b.y); for (let i = 1; i < yl.length; i++) if (yl[i].y - yl[i-1].y < 14) yl[i].y = yl[i-1].y + 14;
+  const rent = Object.fromEntries(D.rentabilidad.map(r => [r.fondo, r.rent_real_anual]));
+  for (const o of yl){ const t = el("text",{x:w-m.r+8,y:o.y+4,class:"lbl-dir"},svg); t.textContent = `${o.f} · ${pct(rent[o.f],1)}/año`; }
+  const cross = el("line",{y1:m.t,y2:h-m.b,style:"stroke:var(--muted);stroke-dasharray:3 3",visibility:"hidden"},svg);
+  const hit = el("rect",{x:m.l,y:m.t,width:w-m.l-m.r,height:h-m.t-m.b,style:"fill:transparent"},svg);
+  hit.addEventListener("pointermove", ev => { const r = svg.getBoundingClientRect(); const i = Math.round((ev.clientX-r.left-m.l)/(w-m.l-m.r)*(n-1));
+    if (i<0||i>=n) return; cross.setAttribute("x1",X(i)); cross.setAttribute("x2",X(i)); cross.setAttribute("visibility","visible");
+    tooltip(tt, cont, X(i), m.t+10, `<div class="t">${I.fechas[i]} · ${D.regimen.nombres[et[i]]}</div>` +
+      FONDOS.map(f=>`<div class="r"><span><span class="sw" style="background:var(--f${f})"></span>Fondo ${f}</span><span>${nf(I[f][i],1)}</span></div>`).join("")); });
+  hit.addEventListener("pointerleave", () => { tt.hidden = true; cross.setAttribute("visibility","hidden"); });
+  $("ley-indice").innerHTML = FONDOS.map(f=>`<span><span class="sw" style="background:var(--f${f})"></span>Fondo ${f}</span>`).join("") +
+    `<span><span class="sw" style="background:var(--shade-tasas);outline:1px solid var(--line)"></span>${D.regimen.nombres[1]}</span><span><span class="sw" style="background:var(--shade-crisis);outline:1px solid var(--line)"></span>${D.regimen.nombres[2]}</span>`;
+}
+
+/* ---------- Monte Carlo afiliado tipo ---------- */
+let mcSexo = "H";
+function dibujarMC(){
+  const cont = $("g-mc"); const filas = [...D.montecarlo[mcSexo]].sort((a,b)=>a.mediana-b.mediana);
+  const {svg, w, h, tt} = lienzo(cont, 34*filas.length + 36);
+  const m = {l:Math.min(170, w*.42), r:14, t:6, b:26}; const xmax = Math.max(...filas.map(f=>f.p95)) * 1.04;
+  const X = v => m.l + (w-m.l-m.r) * v / xmax, Y = i => h - m.b - 34*i - 17;
+  for (const v of ticks(0, xmax, 5)){ el("line",{x1:X(v),x2:X(v),y1:m.t,y2:h-m.b,style:"stroke:var(--grid)"},svg);
+    el("text",{x:X(v),y:h-8,"text-anchor":"middle"},svg).textContent = nf(v,0); }
+  filas.forEach((f,i) => { const c = `var(${COLOR[f.estrategia]})`, y = Y(i);
+    el("text",{x:m.l-8,y:y+4,"text-anchor":"end",class:"lbl-dir"},svg).textContent = f.estrategia.replace(" (aprox. FG)","").replace(" (market timing)","");
+    el("line",{x1:X(f.p5),x2:X(f.p95),y1:y,y2:y,style:`stroke:${c};stroke-width:2;stroke-linecap:round`},svg);
+    el("line",{x1:X(f.p25),x2:X(f.p75),y1:y,y2:y,style:`stroke:${c};stroke-width:8;stroke-linecap:round`},svg);
+    el("circle",{cx:X(f.mediana),cy:y,r:5,style:`fill:var(--card);stroke:${c};stroke-width:2.5`},svg);
+    const hit = el("rect",{x:m.l,y:y-15,width:w-m.l-m.r,height:30,style:"fill:transparent"},svg);
+    hit.addEventListener("pointermove", () => tooltip(tt, cont, X(f.p95), y-10, `<div class="t">${f.estrategia}</div>
+      <div class="r"><span>Mediana</span><span>${nf(f.mediana)} UF</span></div><div class="r"><span>P5 – P95</span><span>${nf(f.p5)}–${nf(f.p95)}</span></div>
+      <div class="r"><span>Tasa de reemplazo</span><span>${pct(f.tasa_reemplazo_mediana)}</span></div><div class="r"><span>Prob. ≥ 40%</span><span>${pct(f.prob_tr_meta)}</span></div>`));
+    hit.addEventListener("pointerleave", () => tt.hidden = true);
+  });
+}
+const tg = (a, b, fn) => { $(a).onclick = () => { $(a).setAttribute("aria-pressed","true"); $(b).setAttribute("aria-pressed","false"); fn(a); };
+  $(b).onclick = () => { $(b).setAttribute("aria-pressed","true"); $(a).setAttribute("aria-pressed","false"); fn(b); }; };
+tg("mcH","mcM", id => { mcSexo = id === "mcH" ? "H" : "M"; dibujarMC(); });
+
+/* ---------- bandas ---------- */
+function dibujarBandas(){
+  const cont = $("g-bandas"); const {svg, w, h, tt} = lienzo(cont, 240);
+  const B = D.bandas, H = B.hist, m = {l:40, r:10, t:24, b:28}; const x0 = B.x0, bw = B.ancho_bin, span = -2*x0;
+  const [b1, b2] = B.permanente.map(v => v*100), bt = B.transicion*100;
+  const X = v => m.l + (w-m.l-m.r) * (v - x0) / span, ymax = Math.max(...H) * 1.1, Y = v => h - m.b - (h-m.t-m.b) * v / ymax;
+  for (const s of [-1,1]){ el("rect",{x:Math.min(X(b1*s),X(b2*s)),y:m.t,width:Math.abs(X(b2)-X(b1)),height:h-m.t-m.b,style:"fill:var(--shade-crisis)"},svg);
+    el("line",{x1:X(bt*s),x2:X(bt*s),y1:m.t,y2:h-m.b,style:"stroke:var(--muted);stroke-dasharray:4 3"},svg); }
+  for (const v of ticks(0, ymax, 4)){ el("line",{x1:m.l,x2:w-m.r,y1:Y(v),y2:Y(v),style:"stroke:var(--grid)"},svg);
+    el("text",{x:m.l-6,y:Y(v)+4,"text-anchor":"end"},svg).textContent = nf(v,0); }
+  H.forEach((c,i) => { if (!c) return; const a = x0 + i*bw;
+    const r = el("rect",{x:X(a)+.5,y:Y(c),width:Math.max(X(a+bw)-X(a)-1,1),height:Y(0)-Y(c),style:"fill:var(--fA)"},svg);
+    r.addEventListener("pointermove", () => tooltip(tt, cont, X(a), Y(c), `<div class="t">${nf(a,1)} a ${nf(a+bw,1)} p.p.</div><div class="r"><span>AFP-meses</span><span>${c}</span></div>`));
+    r.addEventListener("pointerleave", () => tt.hidden = true); });
+  for (const v of [-4,-3,-2,-1,0,1,2,3,4]) el("text",{x:X(v),y:h-8,"text-anchor":"middle"},svg).textContent = (v>0?"+":"") + v;
+  el("text",{x:X((b1+b2)/2),y:m.t-8,"text-anchor":"middle",class:"lbl-dir"},svg).textContent = "permanente";
+  el("text",{x:X(-(b1+b2)/2),y:m.t-8,"text-anchor":"middle",class:"lbl-dir"},svg).textContent = "permanente";
+  el("text",{x:X(bt)-4,y:m.t+12,"text-anchor":"end"},svg).textContent = "transición";
+  $("txt-bandas").textContent = `Rentabilidad de 36 meses de cada AFP menos la de sus pares, en puntos anuales. El 95% de los casos queda bajo ±${nf(B.p95*100,2)} puntos. Las bandas de premios y castigos son de ±${nf(b1,1)} a ±${nf(b2,1)} puntos (franja roja), con una banda de transición de ±${nf(bt,1)} entre ${B.transicion_vigencia} (línea punteada).`;
+}
+
+/* ---------- historia real ---------- */
+let btSexo = "H";
+function tablaBacktest(){
+  const f = [...D.backtest[btSexo]].sort((a,b)=>b.pension_mensual_uf-a.pension_mensual_uf);
+  $("backtest").innerHTML = `<thead><tr><th>Estrategia</th><th>Saldo final (UF)</th><th>Pensión (UF/mes)</th><th>Pensión (CLP de hoy)</th><th>Traspasos</th><th>vs por defecto</th></tr></thead><tbody>` +
+    f.map(r => `<tr class="${r.estrategia==="Por defecto (ley)"?"sel":""}"><td><span class="sw" style="background:var(${COLOR[r.estrategia]})"></span>${r.estrategia}</td><td>${nf(r.saldo_final_uf,0)}</td><td>${nf(r.pension_mensual_uf,2)}</td><td>${clp(r.pension_mensual_uf*D.uf)}</td><td>${r.n_traspasos}</td><td>${r.estrategia==="Por defecto (ley)"?"—":(r.vs_defecto>=0?"+":"−")+pct(Math.abs(r.vs_defecto),1)}</td></tr>`).join("") + `</tbody>`;
+}
+tg("btH","btM", id => { btSexo = id === "btH" ? "H" : "M"; tablaBacktest(); });
+
+/* ---------- robustez ---------- */
+function tablaRobustez(){
+  const sg = v => `<span class="${v>=0?"sube":"baja"}">${v>=0?"+":"−"}${pct(Math.abs(v),1)}</span>`;
+  $("robustez").innerHTML = `<thead><tr><th>Supuesto</th><th>Ciclo de vida: mediana</th><th>Ciclo de vida: P5</th><th>Ciclo de vida gana en</th><th>Reactivo: mediana</th><th>Reactivo pierde en</th><th>Traspasos</th></tr></thead><tbody>` +
+    D.robustez.map(r => `<tr><td>${r.caso}</td><td>${sg(r.cv_vs_defecto_mediana)}</td><td>${sg(r.cv_vs_defecto_p5)}</td><td>${pct(r.prob_cv_supera_defecto)}</td><td>${sg(r.reactivo_vs_defecto_mediana)}</td><td>${pct(r.prob_reactivo_pierde)}</td><td>${nf(r.traspasos_reactivo,0)}</td></tr>`).join("") + `</tbody>`;
+}
+
+function todo(){ correr(); dibujarIndice(); dibujarMC(); dibujarBandas(); tablaBacktest(); tablaRobustez(); }
+let rt; new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(() => { dibujarIndice(); dibujarMC(); dibujarBandas(); correr(); }, 150); }).observe(document.querySelector(".wrap"));
+todo();
+})();
+</script>
