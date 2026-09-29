@@ -1,5 +1,11 @@
 # Registro de cambios
 
+## 2026-10-01
+- **Rediseño de las 16 figuras**: el título es el hallazgo con su número (calculado desde los datos), el subtítulo dice
+  qué se grafica y en qué unidad, color solo en lo que cuenta la historia (resto en gris), etiquetas directas sin leyendas,
+  anotaciones en los momentos clave (2008, 2021), nombres sin jerga ("Se cambia al E tras caídas"), coma decimal y signo
+  menos tipográfico en todos los ejes, títulos alineados al borde de la figura y separación automática de etiquetas.
+
 ## 2026-09-30 (noche)
 - **Simulador personal 2.0** (`app/index.html`): mercado futuro con consenso 2026 por defecto (factores de recentrado
   por fondo que exporta el pipeline, `escenarios.factores_recentrado`), reforma 2025 activable (cotización del empleador
