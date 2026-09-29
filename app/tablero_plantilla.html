@@ -114,7 +114,7 @@ footer{margin-top:48px; padding-top:20px; border-top:1px solid var(--borde); dis
 
   <nav class="secciones" aria-label="Secciones">
     <a href="#hallazgos">Hallazgos</a><a href="#mercado">Mercado 2002–2026</a><a href="#glidepath">Glidepath oficial</a>
-    <a href="#estrategias">Pensión por estrategia</a><a href="#supuestos">Supuestos de mercado</a><a href="#reforma">Pensión total</a>
+    <a href="#estrategias">Pensión por estrategia</a><a href="#supuestos">Supuestos de mercado</a><a href="#reforma">Pensión total</a><a href="#poblacion">Población y género</a>
     <a href="#incertidumbre">Incertidumbre</a><a href="#robustez">Robustez</a><a href="#bandas">Premios y castigos</a>
   </nav>
 
@@ -192,6 +192,29 @@ footer{margin-top:48px; padding-top:20px; border-top:1px solid var(--borde); dis
       <details><summary>Ver tabla por capa</summary><div class="tabla" id="t-reforma"></div></details>
       <p class="nota">Mediana con el fondo por defecto y supuestos de consenso 2026, en UF de hoy. Ley 21.735: cotización del empleador a la cuenta individual de 0,1% a 6% según la fecha, cotización con rentabilidad protegida (bono a 2,52% real) y PGU de $250.275 focalizada. La mujer recibe la PGU desde los 65.</p>
     </div>
+  </section>
+
+  <section id="poblacion">
+    <h2>Lo que cambia la pensión en la población real</h2>
+    <p class="lectura" id="lectura-poblacion"></p>
+    <div class="dos">
+      <div class="lienzo">
+        <div class="barra">
+          <div class="leyenda"><span><i class="caja" style="background:var(--fA)"></i>Solo 10% del trabajador</span><span><i class="caja" style="background:var(--sCV)"></i>Pensión total</span></div>
+          <div class="segmentado" role="group" aria-label="Sexo">
+            <button type="button" id="pob-H" aria-pressed="true">Hombres</button><button type="button" id="pob-M" aria-pressed="false">Mujeres</button>
+          </div>
+        </div>
+        <div class="grafico" id="g-quintiles"></div>
+        <p class="nota">Tasa de reemplazo mediana por quintil del sueldo a los 40 años. Línea punteada: meta de 40%.</p>
+      </div>
+      <div class="lienzo">
+        <h3 id="titulo-brecha">¿De dónde viene la brecha de género?</h3>
+        <div class="grafico" id="g-brecha"></div>
+        <p class="nota">Descomposición de Shapley: aporte promedio de cada factor a la brecha de pensión total mediana, sobre todos los órdenes posibles.</p>
+      </div>
+    </div>
+    <details><summary>Ver tabla por quintil</summary><div class="tabla" id="t-quintiles"></div></details>
   </section>
 
   <section id="incertidumbre">
@@ -429,6 +452,46 @@ function gReforma(){
 }
 $("ref-H").onclick = () => { sexoRef = "H"; alternar("ref","H",gReforma); }; $("ref-M").onclick = () => { sexoRef = "M"; alternar("ref","M",gReforma); };
 
+/* ---------- 3c. microsimulación ---------- */
+const MS = D.microsimulacion; let sexoPob = "H";
+function gQuintiles(){
+  const Q = MS.quintil.filter(r => r.sexo === sexoPob), alto = 300, [s, w] = lienzo("g-quintiles", alto), m = {l:40, r:10, t:22, b:40};
+  const y = lin(0, 1, alto-m.b, m.t), banda = (w-m.l-m.r)/5, bw = Math.min(banda*0.34, 46);
+  ejeY(s, y, [0,.2,.4,.6,.8,1], m.l, w-m.r, v => nf(v*100,0) + "%");
+  el("line", {x1:m.l, x2:w-m.r, y1:y(.4), y2:y(.4), style:"stroke:var(--tinta2);stroke-dasharray:4 3"}, s);
+  Q.forEach((r, i) => { const cx = m.l + banda*(i+.5);
+    [["tr_10_mediana","--fA",-1],["tr_total_mediana","--sCV",1]].forEach(([k, c, lado]) => {
+      const x0 = cx + (lado < 0 ? -bw-2 : 2), v = r[k];
+      const b = el("rect", {x:x0, y:y(v), width:bw, height:y(0)-y(v), rx:2, style:`fill:var(${c})`, class:"marca"}, s);
+      b.addEventListener("pointermove", ev => tip(ev, `<div class="t">Quintil ${r.quintil} · sueldo ${nf(r.sueldo_ref_mediano_uf,0)} UF</div>` +
+        fila("--fA","Solo 10%", pct(r.tr_10_mediana)) + fila("--sCV","Pensión total", pct(r.tr_total_mediana)) +
+        fila(null,"Supera 40%", pct(r.prob_tr_meta_total)) + fila(null,"PGU mediana", nf(r.pgu_mediana,1) + " UF") +
+        fila(null,"Ciclo de vida vs defecto", pctS(r.cv_vs_defecto_total))));
+      b.addEventListener("pointerleave", ocultar); });
+    el("text", {x:cx+2+bw/2, y:y(r.tr_total_mediana)-5, "text-anchor":"middle", class:"fuerte"}, s).textContent = pct(r.tr_total_mediana);
+    el("text", {x:cx, y:alto-m.b+15, "text-anchor":"middle"}, s).textContent = `Q${r.quintil}`;
+    el("text", {x:cx, y:alto-m.b+30, "text-anchor":"middle", style:"fill:var(--muda)"}, s).textContent = `${nf(r.sueldo_ref_mediano_uf,0)} UF`; });
+  tabla("t-quintiles", ["Sexo","Quintil","Sueldo a los 40 (UF)","TR solo 10%","TR total","Supera 40%","PGU mediana (UF)","Ciclo de vida vs defecto"],
+    MS.quintil.map(r => [r.sexo === "H" ? "Hombre" : "Mujer", r.quintil, nf(r.sueldo_ref_mediano_uf,1), pct(r.tr_10_mediana), pct(r.tr_total_mediana),
+      pct(r.prob_tr_meta_total), nf(r.pgu_mediana,1), pctS(r.cv_vs_defecto_total)]));
+}
+function gBrecha(){
+  const B = MS.brecha, alto = B.length*40 + 30, [s, w] = lienzo("g-brecha", alto), etiq = Math.min(190, w*0.44), m = {l:etiq, r:70, t:6, b:22};
+  const x = lin(0, Math.max(...B.map(r => r.aporte_pp_brecha))*1.05, m.l, w-m.r);
+  B.forEach((r, i) => { const yc = m.t + 16 + i*40, resid = r.factor.startsWith("Residuo");
+    const t = el("text", {x:m.l-8, y:yc+4, "text-anchor":"end", style:"font-size:11.5px"}, s); t.textContent = resid ? "Residuo" : r.factor.replace(" (tabla de mortalidad)","");
+    el("rect", {x:m.l, y:yc-10, width:Math.max(x(r.aporte_pp_brecha)-m.l, 1), height:20, rx:2, style:`fill:var(${resid ? "--eje" : "--sRe"})`}, s);
+    el("text", {x:x(r.aporte_pp_brecha)+6, y:yc+4, class:"fuerte"}, s).textContent = `${nf(r.aporte_pp_brecha*100,1)} p.p.`; });
+  $("titulo-brecha").textContent = `La pensión total de una mujer es ${pct(-MS.brecha_total)} menor: ¿por qué?`;
+}
+{ const H_ = MS.sexo.find(r => r.sexo === "H"), M_ = MS.sexo.find(r => r.sexo === "M");
+  const top = [...MS.brecha].filter(r => !r.factor.startsWith("Residuo")).sort((a,b) => b.aporte_pp_brecha - a.aporte_pp_brecha)[0];
+  $("lectura-poblacion").textContent = `Microsimulación de ${nf(MS.n_personas,0)} personas con ingreso, densidad de cotización y lagunas calibrados con datos de la SP, ` +
+    `todas frente a los mismos escenarios de mercado. La tasa de reemplazo total mediana es ${pct(H_.tr_total_mediana)} en hombres y ${pct(M_.tr_total_mediana)} en mujeres; ` +
+    `en ${pct(M_.pct_pgu_mayor_mitad)} de los casos de mujeres la PGU es más de la mitad de la pensión. La principal causa de la brecha de género es la ${top.factor.split(" (")[0].toLowerCase()}, ` +
+    `con ${pct(top.aporte_pp_brecha / -MS.brecha_total)} de la brecha.`; }
+$("pob-H").onclick = () => { sexoPob = "H"; alternar("pob","H",gQuintiles); }; $("pob-M").onclick = () => { sexoPob = "M"; alternar("pob","M",gQuintiles); };
+
 /* ---------- 4. incertidumbre ---------- */
 function gInc(){
   const alto = 380, [s, w] = lienzo("g-inc", alto), m = {l:52, r:16, t:14, b:40};
@@ -499,7 +562,7 @@ function gBandas(){
 function alternar(pref, valor, fn){ for (const k of ["H","M"]) $(`${pref}-${k}`).setAttribute("aria-pressed", String(k === valor)); fn(); }
 $("mc-H").onclick = () => { sexoMC = "H"; alternar("mc","H",gMC); }; $("mc-M").onclick = () => { sexoMC = "M"; alternar("mc","M",gMC); };
 $("esg-H").onclick = () => { sexoESG = "H"; alternar("esg","H",gESG); }; $("esg-M").onclick = () => { sexoESG = "M"; alternar("esg","M",gESG); };
-const todo = () => { gMercado(); gGlide(); gMC(); gESG(); gReforma(); gInc(); gRob(); gBandas(); };
+const todo = () => { gMercado(); gGlide(); gMC(); gESG(); gReforma(); gQuintiles(); gBrecha(); gInc(); gRob(); gBandas(); };
 todo(); let t0; addEventListener("resize", () => { clearTimeout(t0); t0 = setTimeout(todo, 150); });
 })();
 </script>

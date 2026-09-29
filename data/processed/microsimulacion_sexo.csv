@@ -1,0 +1,3 @@
+sexo,personas,densidad_media,sueldo_ref_mediano_uf,pension_10_mediana,pension_total_mediana,tr_10_mediana,tr_total_mediana,prob_tr_meta_10,prob_tr_meta_total,pct_pgu_mayor_mitad,cv_vs_defecto_mediana,pct_personas_cv_gana,pct_sin_pension
+H,11239,0.58060,26.25830,7.48199,17.38973,0.26702,0.62718,0.23579,0.82324,0.32415,0.05221,0.96530,0.00116
+M,8761,0.49888,22.78886,3.40948,11.29128,0.14484,0.48683,0.02233,0.66106,0.55773,0.04605,0.93448,0.00126

@@ -33,6 +33,8 @@ Este proyecto usa 24 años de datos oficiales para responder tres preguntas:
 | 10 | Con las expectativas de mercado actuales, la ventaja del ciclo de vida es real pero mucho menor que la histórica. | Recentrando los escenarios en el consenso 2026 (renta fija UF 2,52%, renta variable global 4,4% real): Fondo A 4,1% y E 2,7% real/año; ciclo de vida vs por defecto +12% en la mediana (vs +46% con la historia), percentil 5 -2%, gana en 68% de los escenarios. Sin prima de crecimiento: -1%. La probabilidad de alcanzar una tasa de reemplazo de 40% es 10% (por defecto) y 25% (ciclo de vida). |
 | 11 | La reforma de 2025 cambia más la pensión que cualquier estrategia de inversión: la tasa de reemplazo se duplica. | Fondo por defecto, consenso 2026. Hombre: solo con el 10% del trabajador, tasa de reemplazo mediana 27% (10% llega a 40%); con cotización del empleador, rentabilidad protegida y PGU, 58% (98% llega a 40%). Mujer (PGU desde los 65): 17% → 43%. La PGU es progresiva: con sueldo de 15 UF la tasa total es 69% y con 60 UF, 40%. |
 | 12 | El glidepath oficial está muy cerca del óptimo, y la PGU justifica llegar al retiro con más riesgo. | Maximizando la utilidad CRRA de la pensión total (hombre, consenso 2026, escenarios de prueba), el mejor glidepath de la familia supera al oficial en solo +0,3% a +3,1% de pensión equivalente cierta (aversión γ de 2 a 5); el fondo por defecto de la ley queda -9% a -1% bajo el oficial. Con γ = 3, el óptimo llega al retiro con 70% en crecimiento si se cuenta la PGU y 40% sin ella (el oficial, 29%): la PGU actúa como un bono. |
+| 13 | En la población real la pensión depende sobre todo del ingreso y de las lagunas: la PGU la vuelve muy progresiva. | Microsimulación de 20 mil personas con ingreso y densidad calibrados con la SP (consenso 2026, fondo por defecto): tasa de reemplazo total mediana 63% en hombres y 49% en mujeres (solo con el 10%: 27% y 14%). Del quintil 1 al 5 la tasa total baja de 91% a 50% (hombres). La PGU es más de la mitad de la pensión en 56% de los casos de mujeres. El ciclo de vida sube la pensión total +3% en el quintil 1 y +9% en el 5: la PGU amortigua su efecto en los de menores ingresos. |
+| 14 | La edad de pensión es la principal causa de la brecha de género, por sobre las lagunas y el sueldo. | La pensión total mediana de una mujer es 36% menor que la de un hombre. Descomposición de Shapley: densidad de cotización 9,7 pp; nivel de ingreso 6,6 pp; edad de pensión (60 vs 65) 14,8 pp; esperanza de vida (tabla de mortalidad) 4,1 pp. El factor más importante es «Edad de pensión (60 vs 65)», con 41% de la brecha. |
 <!-- HALLAZGOS:FIN -->
 
 Todas las cifras se recalculan con `python run_pipeline.py`; esta tabla la **reescribe el pipeline** desde los datos.
@@ -46,6 +48,8 @@ Todas las cifras se recalculan con `python run_pipeline.py`; esta tabla la **ree
 ![Escenarios de mercado](reports/figuras/10_escenarios_mercado_H.png)
 ![Pensión total](reports/figuras/11_pension_total_H.png)
 ![Glidepath óptimo](reports/figuras/12_glidepath_optimo.png)
+![Población](reports/figuras/13_poblacion_quintiles.png)
+![Brecha de género](reports/figuras/14_brecha_genero.png)
 
 ---
 
@@ -54,7 +58,7 @@ Todas las cifras se recalculan con `python run_pipeline.py`; esta tabla la **ree
 ```bash
 pip install -r requirements.txt       # o: make instalar
 python run_pipeline.py                # o: make pipeline   (~3 min con 8 núcleos, todo desde los datos crudos)
-python -m unittest discover -s tests  # o: make pruebas    (29 pruebas, ~20 s)
+python -m unittest discover -s tests  # o: make pruebas    (35 pruebas, ~20 s)
 ```
 
 Con Docker (mismo resultado en cualquier máquina):
@@ -95,6 +99,7 @@ proyecto-afp/
 │   ├── incertidumbre.py       # bootstrap: HMM paramétrico, GARCH filtrado, historia por bloques
 │   ├── reforma.py             # pensión total: cotización del empleador, rentabilidad protegida y PGU (Ley 21.735)
 │   ├── optimo.py              # glidepath óptimo por utilidad CRRA (entrenamiento/prueba)
+│   ├── microsimulacion.py     # cohorte de 20.000 personas: ingreso, lagunas, género (Shapley)
 │   ├── bandas.py              # riesgo de premios y castigos (36 meses móviles)
 │   ├── figuras.py             # gráficos (paleta validada para daltonismo)
 │   └── reporte_excel.py       # reporte maestro + simulador en fórmulas

@@ -335,3 +335,56 @@ def glidepath_optimo(res: pd.DataFrame, gamma: float = 3.0, sexo: str = "H"):
                             "entre paréntesis: equivalente cierto frente al oficial, en escenarios de prueba (consenso 2026)",
                    "12_glidepath_optimo.png",
                    nota="Familia: meseta g0 hasta la edad a1 y baja lineal hasta g1 al retiro. Hombre, sueldo 25 UF. Elaboración propia.")
+
+
+def poblacion_quintiles(q: pd.DataFrame, meta: float = config.SIM["tasa_reemplazo_meta"]):
+    """Tasa de reemplazo mediana por quintil de ingreso y sexo: solo 10% del trabajador vs pensión total."""
+    fig, axes = plt.subplots(1, 2, figsize=(11, 5.2), facecolor=SUP, sharey=True)
+    for ax, sexo in zip(axes, ("H", "M")):
+        ax.set_facecolor(SUP)
+        for s in ("top", "right", "left"):
+            ax.spines[s].set_visible(False)
+        ax.spines["bottom"].set_color(EJE); ax.grid(axis="y", color=GRID, lw=0.8); ax.tick_params(colors=TXT2, length=0)
+        ax.set_axisbelow(True)
+        t = q[q.sexo == sexo]; x = np.arange(5)
+        ax.bar(x - 0.19, t.tr_10_mediana * 100, 0.36, color=COLOR_FONDO["A"], label="Solo 10% del trabajador")
+        ax.bar(x + 0.19, t.tr_total_mediana * 100, 0.36, color=COLOR_ESTRATEGIA["Ciclo de vida (aprox. FG)"],
+               label="Pensión total (reforma + PGU)")
+        for i, r in enumerate(t.itertuples()):
+            ax.annotate(f"{r.tr_total_mediana * 100:.0f}%", (i + 0.19, r.tr_total_mediana * 100), xytext=(0, 4),
+                        textcoords="offset points", ha="center", fontsize=9, color=TXT)
+        ax.axhline(meta * 100, color=TXT2, lw=1, ls=(0, (4, 3)))
+        ax.set_xticks(x); ax.set_xticklabels([f"Q{k}\n{es(v, 0)} UF" for k, v in zip(t.quintil, t.sueldo_ref_mediano_uf)], color=TXT)
+        ax.set_title("Hombres" if sexo == "H" else "Mujeres (PGU desde los 65)", loc="left", fontsize=11, color=TXT)
+    axes[0].set_ylabel("Tasa de reemplazo mediana (%)", color=TXT2)
+    axes[0].annotate("meta 40%", (-0.45, meta * 100), xytext=(0, 3), textcoords="offset points", ha="left", fontsize=8.5, color=TXT2)
+    axes[0].legend(frameon=False, loc="upper right", fontsize=9, labelcolor=TXT)
+    fig.suptitle("Microsimulación de 20.000 personas: tasa de reemplazo por quintil de ingreso (sueldo a los 40 años)",
+                 x=0.01, ha="left", fontsize=12, color=TXT)
+    fig.text(0.01, 0.01, "Ingreso y densidad por sexo calibrados con la SP (2026); lagunas como rachas; consenso 2026; fondo por defecto. "
+             "Elaboración propia.", fontsize=8, color=TXT2)
+    fig.tight_layout(rect=(0, 0.03, 1, 0.95))
+    ruta = config.FIGURAS / "13_poblacion_quintiles.png"; fig.savefig(ruta, dpi=150, facecolor=SUP); plt.close(fig)
+    return ruta
+
+
+def brecha_genero(b: pd.DataFrame):
+    """Descomposición de Shapley de la brecha de pensión mujer/hombre (puntos porcentuales)."""
+    t = b.iloc[::-1].reset_index(drop=True)
+    fig, ax = plt.subplots(figsize=(11, 4.6), facecolor=SUP); ax.set_facecolor(SUP)
+    for s in ("top", "right", "left"):
+        ax.spines[s].set_visible(False)
+    ax.spines["bottom"].set_color(EJE); ax.grid(axis="x", color=GRID, lw=0.8); ax.tick_params(colors=TXT2, length=0)
+    ax.set_axisbelow(True)
+    col = COLOR_ESTRATEGIA["Reactivo (market timing)"]
+    ax.barh(t.index, t.aporte_pp_brecha * 100, 0.56, color=[col if "Residuo" not in f else EJE for f in t.factor])
+    for i, r in t.iterrows():
+        ax.annotate(f"{es(r.aporte_pp_brecha * 100)} pp ({r.aporte_pp_brecha / -b.attrs['brecha'] * 100:.0f}% de la brecha)",
+                    (r.aporte_pp_brecha * 100, i), xytext=(6, 0), textcoords="offset points", va="center", fontsize=9.5, color=TXT)
+    ax.set_yticks(t.index)
+    ax.set_yticklabels(["Residuo" if "Residuo" in f else f.split(" (")[0] for f in t.factor], color=TXT)
+    ax.set_xlim(0, t.aporte_pp_brecha.max() * 100 * 1.45)
+    ax.set_xlabel("Puntos porcentuales de la brecha de pensión total mediana", color=TXT2)
+    return _cerrar(fig, ax, f"¿De dónde viene la brecha de género? La pensión total de una mujer es {-b.attrs['brecha'] * 100:.0f}% menor\n"
+                            "Shapley: aporte de cada factor, promediado sobre todos los órdenes posibles", "14_brecha_genero.png",
+                   nota="Microsimulación, fondo por defecto, consenso 2026. Mortalidad: tablas CB-H/RV-M 2020 (CMF). Elaboración propia.")

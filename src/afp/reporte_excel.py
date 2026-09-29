@@ -212,6 +212,20 @@ def construir(ruta, r: dict):
                notas=["Familia: meseta g0 hasta la edad a1 y baja lineal hasta g1 al retiro; réplica con multifondos.",
                       "Criterio: utilidad CRRA de la pensión total (con_reforma = cotización del empleador, rentabilidad protegida y PGU).",
                       "Grilla evaluada en escenarios de entrenamiento; resultados reportados en escenarios de prueba independientes."])
+    if "micro_sexo" in r:
+        fm = {c: pct for c in ("densidad_media", "tr_10_mediana", "tr_total_mediana", "prob_tr_meta_10", "prob_tr_meta_total",
+                               "pct_pgu_mayor_mitad", "cv_vs_defecto_mediana", "pct_personas_cv_gana", "pct_sin_pension",
+                               "prob_tr_meta_total", "cv_vs_defecto_total", "cv_vs_defecto_propia", "aporte_pp_brecha")}
+        fm |= {c: "0.00" for c in ("sueldo_ref_mediano_uf", "pension_10_mediana", "pension_total_mediana", "pgu_mediana", "aporte_uf")}
+        notas = ["Cohorte sintética que empieza a cotizar a los 25 en 2026. Ingreso lognormal y densidad Beta por sexo calibrados con la SP (2026);",
+                 "lagunas como rachas de empleo formal (cadena de Markov); supuestos de mercado de consenso 2026; fondo por defecto salvo cv_*.",
+                 "Métricas por persona: mediana sobre 400 escenarios de mercado comunes a toda la cohorte."]
+        _tabla(wb, "Poblacion_sexo", r["micro_sexo"], fm, titulo="Microsimulación poblacional: resultados por sexo", notas=notas)
+        _tabla(wb, "Poblacion_quintil", r["micro_quintil"], fm, titulo="Microsimulación: tasa de reemplazo y PGU por quintil de ingreso",
+               notas=notas)
+        _tabla(wb, "Brecha_genero", r["micro_brecha"], fm, anchos=[48, 14, 18],
+               titulo="Descomposición de Shapley de la brecha de pensión total mediana mujer/hombre",
+               notas=["Aporte = efecto marginal promedio de asignar a las mujeres la característica de los hombres, sobre todos los órdenes."])
     if "incertidumbre" in r:
         t = r["incertidumbre"].reindex(columns=["bloque", "regimen", "fondo", "metrica", "p05", "mediana", "p95"])
         t = t.replace([np.inf, -np.inf], np.nan).astype(object).where(t.notna(), None)

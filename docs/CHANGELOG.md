@@ -1,5 +1,14 @@
 # Registro de cambios
 
+## 2026-09-30
+- **Microsimulación poblacional** (hoja de ruta 2.4): `microsimulacion.py`, una cohorte de 20.000 personas con ingreso
+  y densidad calibrados con la SP, lagunas como rachas (Markov) y un mercado común; se calcula con una multiplicación de
+  matrices. Hallazgos 13 (progresividad: TR total de 91% en Q1 a 50% en Q5, hombres) y 14 (Shapley de la brecha de
+  género: la edad de pensión explica el 41%). Figuras 13 y 14; hojas Excel `Poblacion_sexo`, `Poblacion_quintil` y
+  `Brecha_genero`; sección "Población y género" en el tablero.
+- Rendimiento: `factores_crecimiento` devuelve un arreglo contiguo; la multiplicación usa BLAS (49 s → 7 s).
+- Pruebas: 35 (calibración, rachas, matmul = acumulación mes a mes, eficiencia de Shapley).
+
 ## 2026-09-29 (noche)
 - Repositorio publicado en GitHub (`tav0-m/AFP`); `.gitattributes` normaliza los finales de línea (LF).
 - **Pensión total con la reforma** (hoja de ruta 1.4): nuevo `reforma.py` (Ley 21.735: cotización del empleador por

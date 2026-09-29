@@ -1,0 +1,6 @@
+factor,aporte_uf,aporte_pp_brecha
+Densidad de cotización,1.72081,0.09741
+Nivel de ingreso,1.16312,0.06584
+Edad de pensión (60 vs 65),2.61217,0.14787
+Esperanza de vida (tabla de mortalidad),0.72892,0.04126
+Residuo (fondo por defecto por sexo y muestreo),0.11770,0.00666

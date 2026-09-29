@@ -104,6 +104,23 @@ REFORMA = {
     "sueldos_uf": [15, 25, 40, 60],       # perfiles de ingreso para la figura de pilares
 }
 
+# Microsimulación poblacional (hoja de ruta 2.4): cohorte que empieza a cotizar a los 25 en 2026.
+# * Ingreso imponible lognormal por sexo, calibrado con mediana (SP, jun-2026) y media (SP, abr-2026) de los
+#   cotizantes; se interpreta como el sueldo a los 40 años y se trunca en el tope imponible (90 UF, 2026).
+# * Densidad de cotización ~ Beta con la media por sexo (SP, Informe de Género: 57,9% H, 49,6% M desde la afiliación),
+#   concentración κ (dispersión, supuesto) y correlación ρ con el ingreso vía cópula gaussiana (supuesto).
+# * Lagunas como rachas: empleo formal/informal es una cadena de Markov mensual con duración media de la racha
+#   formal de 36 meses y probabilidad estacionaria igual a la densidad de cada persona.
+# * PGU: se excluye al 10% de mayores ingresos (aproximación del requisito de focalización).
+MICROSIM = {
+    "n_personas": 20_000, "n_escenarios": 400, "semilla": 20260930, "prop_mujeres": 0.44,
+    "uf_ingresos": 40_820.31,            # UF al 30-06-2026 (BCCh), para pasar los pesos de la SP a UF
+    "ingreso": {"H": {"mediana": 1_076_628, "media": 1_419_609}, "M": {"mediana": 926_383, "media": 1_263_282}},
+    "densidad": {"H": 0.579, "M": 0.496}, "concentracion_densidad": 2.0, "rho_ingreso_densidad": 0.3,
+    "racha_formal_meses": 36, "tope_imponible_uf": 90.0, "piso_ingreso_uf": 5.0, "edad_ingreso_referencia": 40,
+    "focalizacion_pgu": 0.90,
+}
+
 # Incertidumbre de parámetros (bootstrap). IC de 90% = percentiles 5-95 de las réplicas.
 # bloque_medio: largo medio (meses) de los bloques del bootstrap estacionario de la historia.
 INCERTIDUMBRE = {"B_hmm": 200, "B_garch": 100, "B_pensiones": 200, "n_escenarios": 2000,

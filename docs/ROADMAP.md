@@ -23,7 +23,7 @@ en vigencia de los fondos generacionales (01-04-2027).
 | 2.1 | ✅ **Escenarios forward-looking** | Generador de escenarios económicos (ESG) con primas de riesgo de consenso y curva de tasas actual, para no extrapolar 2002–2026. Comparar con el bootstrap |
 | 2.2 | **Regímenes con predictores macro** | Markov-switching con probabilidades de transición variables (TVTP) usando TPM, IPC, dólar y cobre (ya descargables con `descarga_bcentral.py`); contraste con gradient boosting / LSTM con validación *walk-forward* |
 | 2.3 | ✅ **Glidepath óptimo** | Programación dinámica estocástica o aprendizaje por refuerzo que maximice utilidad CRRA o la probabilidad de alcanzar la meta; comparar contra el glidepath regulatorio |
-| 2.4 | **Microsimulación poblacional** | Perfiles heterogéneos (densidad de cotización, ingresos, lagunas, género) desde las series de cotizantes de la SP, en vez de un afiliado tipo |
+| 2.4 | ✅ **Microsimulación poblacional** | Perfiles heterogéneos (densidad de cotización, ingresos, lagunas, género) desde las series de cotizantes de la SP, en vez de un afiliado tipo |
 | 2.5 | ✅ **Incertidumbre de parámetros** | Robustez frente a 13 supuestos y bootstrap del HMM, del GARCH y de la historia (hallazgo 9, figura 08). Siguiente paso natural: 2.1, porque la prima de renta variable domina la incertidumbre |
 
 ## Fase 3 — Ingeniería y producto (en paralelo)

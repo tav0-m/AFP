@@ -174,3 +174,28 @@ g1 ∈ {8%…80%}. Sobre 100% se extrapola por la recta A–E, como en la secci�
 
 Limitación: es una familia paramétrica, no programación dinámica. El óptimo no reacciona al saldo acumulado ni al
 régimen de mercado, igual que el glidepath oficial, así que la comparación es justa.
+
+## 11. Microsimulación poblacional (`microsimulacion.py`)
+
+Reemplaza al afiliado tipo por una **cohorte sintética de 20.000 personas** que empieza a cotizar a los 25 años en 2026.
+
+- **Ingreso**: lognormal por sexo, calibrada con la mediana (SP, jun-2026: $1.076.628 H, $926.383 M) y la media
+  (SP, abr-2026: $1.419.609 H, $1.263.282 M) del ingreso imponible de los cotizantes: σ = √(2·ln(media/mediana)).
+  Se interpreta como el sueldo a los 40 años, se proyecta con el perfil de edad del proyecto y se trunca en el tope
+  imponible (90 UF).
+- **Densidad de cotización**: Beta(μκ, (1−μ)κ) con μ por sexo (57,9% H, 49,6% M; SP, Informe de Género) y κ = 2,
+  correlacionada con el ingreso (ρ = 0,3, cópula gaussiana). κ y ρ son supuestos.
+- **Lagunas como rachas**: el empleo formal es una cadena de Markov mensual con racha formal media de 36 meses y
+  probabilidad estacionaria igual a la densidad de cada persona. No da lo mismo cotizar a los 25 que a los 60.
+- **Mercado común**: las 20.000 personas enfrentan los mismos 400 escenarios de consenso 2026. Como el saldo es lineal
+  en los aportes, el saldo de todas las personas en todos los escenarios es A·Gᵀ, con A la matriz de aportes
+  (personas × meses) y G[s,t] el factor de crecimiento del mes t al retiro en el escenario s.
+- **Pensión total**: capas de la sección 9. La PGU excluye al 10% de mayores ingresos de toda la población (aproximación
+  de la focalización).
+- **Brecha de género (Shapley)**: v(S) es la pensión total mediana de las mujeres cuando se les asignan las
+  características de los hombres del conjunto S ⊆ {densidad, ingreso, edad de pensión, mortalidad}. El aporte de cada
+  factor es su efecto marginal promedio sobre los 4! órdenes (16 evaluaciones, con las mismas personas y rachas). Los
+  aportes suman exactamente la brecha; el residuo es el fondo por defecto por sexo y el muestreo.
+
+Limitaciones: la densidad y el ingreso de cada persona son estables durante toda su vida (salvo el perfil de edad);
+no hay movilidad entre quintiles. Tampoco se modelan cotizantes independientes ni ahorro voluntario.

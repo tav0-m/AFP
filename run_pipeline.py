@@ -14,7 +14,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 from afp import (bandas, config, econometria, escenarios, etl_valores_cuota,  # noqa: E402
-                 figuras, incertidumbre, mortalidad, optimo, reforma, reporte_excel, retornos, robustez,
+                 figuras, incertidumbre, microsimulacion, mortalidad, optimo, reforma, reporte_excel, retornos, robustez,
                  simulacion)
 
 NOMBRES_REGIMEN = {3: ["Calma", "Tasas volátiles (post-2019)", "Crisis bursátil"],
@@ -99,6 +99,8 @@ def main():
     R_cons = escenarios.simular(m[config.FONDOS], modelo, meses=480, n=p["n_simulaciones"], semilla=p["semilla"],
                                 objetivo=escenarios.retornos_objetivo(config.ESG["Consenso de mercado 2026"], config.GLIDEPATH))
     pt = {s: reforma.pension_total(R_cons, s) for s in ("H", "M")}
+    paso("4b3b. Microsimulación poblacional (20.000 personas, mismos escenarios de mercado)")
+    micro = microsimulacion.evaluar(R_cons)
     ref_res = pd.concat([reforma.resumen(pt[s]).assign(sexo=s) for s in ("H", "M")], ignore_index=True)
     ref_ing = pd.concat([reforma.por_ingreso(R_cons, s).assign(sexo=s) for s in ("H", "M")], ignore_index=True)
     del R_cons
@@ -130,6 +132,8 @@ def main():
     figuras.robustez(rob)
     figuras.glidepath()
     figuras.glidepath_optimo(opt_res)
+    figuras.poblacion_quintiles(micro["quintil"])
+    figuras.brecha_genero(micro["brecha"])
     for sexo in ("H", "M"):
         figuras.pilares(ref_ing[ref_ing.sexo == sexo], sexo)
     for sexo in ("H", "M"):
@@ -157,6 +161,10 @@ def main():
     rtot = lambda s: rr.loc[(s, dflt, "+ PGU (pensión total)")]
     ri = ref_ing[ref_ing.sexo == "H"]
     oo = opt_res.set_index(["con_reforma", "gamma"])
+    ms_s, ms_q, ms_b = micro["sexo"].set_index("sexo"), micro["quintil"], micro["brecha"]
+    qH = ms_q[ms_q.sexo == "H"].set_index("quintil")
+    top = ms_b.iloc[ms_b.aporte_pp_brecha.idxmax()]
+    n_pers = f"{config.MICROSIM['n_personas'] // 1000} mil"
     hallazgos = [
         ("La inflación se lleva ~3,9 puntos al año: la rentabilidad real es mucho menor que la publicitada.",
          f"Fondo A: {rent.rent_nominal_anual[0]:.1%} nominal vs {rent.rent_real_anual[0]:.1%} real; "
@@ -223,6 +231,18 @@ def main():
          f"{opt_res.defecto_vs_oficial.max():+.0%} bajo el oficial. Con γ = 3, el óptimo llega al retiro con "
          f"{oo.loc[(True, 3.0), 'g1']:.0%} en crecimiento si se cuenta la PGU y {oo.loc[(False, 3.0), 'g1']:.0%} sin ella "
          f"(el oficial, {simulacion.crecimiento_glidepath(np.array([config.EDAD_LEGAL['H'] - 1]))[0]:.0%}): la PGU actúa como un bono."),
+        ("En la población real la pensión depende sobre todo del ingreso y de las lagunas: la PGU la vuelve muy progresiva.",
+         f"Microsimulación de {n_pers} personas con ingreso y densidad calibrados con la SP (consenso 2026, fondo por defecto): "
+         f"tasa de reemplazo total mediana {ms_s.loc['H', 'tr_total_mediana']:.0%} en hombres y {ms_s.loc['M', 'tr_total_mediana']:.0%} "
+         f"en mujeres (solo con el 10%: {ms_s.loc['H', 'tr_10_mediana']:.0%} y {ms_s.loc['M', 'tr_10_mediana']:.0%}). Del quintil 1 al 5 "
+         f"la tasa total baja de {qH.loc[1, 'tr_total_mediana']:.0%} a {qH.loc[5, 'tr_total_mediana']:.0%} (hombres). La PGU es más de la "
+         f"mitad de la pensión en {ms_s.loc['M', 'pct_pgu_mayor_mitad']:.0%} de los casos de mujeres. El ciclo de vida sube la pensión total "
+         f"{qH.loc[1, 'cv_vs_defecto_total']:+.0%} en el quintil 1 y {qH.loc[5, 'cv_vs_defecto_total']:+.0%} en el 5: la PGU amortigua su "
+         f"efecto en los de menores ingresos."),
+        ("La edad de pensión es la principal causa de la brecha de género, por sobre las lagunas y el sueldo.",
+         f"La pensión total mediana de una mujer es {-ms_b.attrs['brecha']:.0%} menor que la de un hombre. Descomposición de Shapley: "
+         + "; ".join(f"{r.factor.lower()} {r.aporte_pp_brecha * 100:.1f} pp" for r in ms_b.itertuples() if "Residuo" not in r.factor)
+         + f". El factor más importante es «{top.factor}», con {top.aporte_pp_brecha / -ms_b.attrs['brecha']:.0%} de la brecha."),
     ]
 
     import re
@@ -252,6 +272,7 @@ def main():
                bic_texto="; ".join(f"K={int(r.K)}: BIC {r.BIC:,.1f}" for r in tabla_bic.itertuples()),
                transicion=modelo["A"], garch=garch, montecarlo=mc, sensibilidad=sens,
                backtest=pd.concat([b.assign(sexo=s) for s, b in back.items()]), bandas=fb, robustez=rob, esg=esg, reforma=ref_res, reforma_ingreso=ref_ing, optimo=opt_res,
+               micro_sexo=micro["sexo"], micro_quintil=micro["quintil"], micro_brecha=micro["brecha"],
                incertidumbre=pd.concat([inc["resumen_pensiones"].assign(bloque="Pensiones (historia remuestreada)"),
                                         inc["resumen_hmm"].assign(bloque="HMM (paramétrico)"),
                                         inc["resumen_garch"].assign(bloque="GARCH (residuos filtrados)")], ignore_index=True),
@@ -272,6 +293,8 @@ def main():
     esg.to_csv(config.DATA_PROC / "escenarios_mercado.csv", index=False, float_format="%.5f")
     ref_res.to_csv(config.DATA_PROC / "pension_total_capas.csv", index=False, float_format="%.5f")
     opt_res.to_csv(config.DATA_PROC / "glidepath_optimo.csv", index=False, float_format="%.5f")
+    for k in ("sexo", "quintil", "brecha"):
+        micro[k].to_csv(config.DATA_PROC / f"microsimulacion_{k}.csv", index=False, float_format="%.5f")
     opt_comp.to_csv(config.DATA_PROC / "glidepath_optimo_comparacion.csv", index=False, float_format="%.5f")
     ref_ing.to_csv(config.DATA_PROC / "pension_total_por_ingreso.csv", index=False, float_format="%.5f")
     for k in ("hmm", "garch", "pensiones"):
@@ -304,6 +327,11 @@ def main():
            "reforma": {"capas": ref_res.round(4).to_dict("records"), "ingreso": ref_ing.round(4).to_dict("records"),
                        "pgu": reforma.parametros_uf()},
            "optimo": opt_res.round(5).to_dict("records"),
+           "microsimulacion": {"sexo": micro["sexo"].round(4).to_dict("records"),
+                               "quintil": micro["quintil"].round(4).to_dict("records"),
+                               "brecha": micro["brecha"].round(4).to_dict("records"),
+                               "brecha_total": micro["brecha"].attrs["brecha"],
+                               "n_personas": config.MICROSIM["n_personas"]},
            "escenarios_pensiones": esg_pens[["escenario", "estrategia", "sexo", "p5", "p25", "mediana", "p75", "p95"]]
                                    .round(3).to_dict("records"),
            "incertidumbre": inc["pensiones"][["prima_real_A_vs_E", "cv_vs_defecto_mediana",

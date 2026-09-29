@@ -227,6 +227,43 @@ class TestOptimo(unittest.TestCase):
         np.testing.assert_allclose(g, [0.9, 0.9, 0.6, 0.3])
 
 
+class TestMicrosimulacion(unittest.TestCase):
+    def setUp(self):
+        from afp import microsimulacion, config
+        self.ms, self.cfg = microsimulacion, config
+
+    def test_calibracion_ingreso_y_densidad(self):
+        c = dict(self.cfg.MICROSIM, tope_imponible_uf=1e9, piso_ingreso_uf=0)
+        pob = self.ms.generar_poblacion(200_000, np.random.default_rng(1), c)
+        for s in ("H", "M"):
+            x = pob[pob.sexo == s]
+            self.assertAlmostEqual(x.sueldo_ref_uf.median(), c["ingreso"][s]["mediana"] / c["uf_ingresos"], delta=0.3)
+            self.assertAlmostEqual(x.sueldo_ref_uf.mean(), c["ingreso"][s]["media"] / c["uf_ingresos"], delta=0.5)
+            self.assertAlmostEqual(x.densidad.mean(), c["densidad"][s], delta=0.01)
+        self.assertGreater(np.corrcoef(np.log(pob.sueldo_ref_uf), pob.densidad)[0, 1], 0.15)
+
+    def test_rachas_respetan_densidad_y_duracion(self):
+        f = self.ms.rachas_formales(np.full(4000, 0.6), 480, 36, np.random.default_rng(2))
+        self.assertAlmostEqual(f.mean(), 0.6, delta=0.01)
+        salidas = (f[:, :-1] & ~f[:, 1:]).sum()
+        self.assertAlmostEqual(f[:, :-1].sum() / salidas, 36, delta=1.5)            # duración media de la racha
+
+    def test_matmul_igual_a_acumular(self):
+        from afp import simulacion
+        rng = np.random.default_rng(4)
+        R = rng.normal(0.004, 0.03, (30, 120, 5)); W = simulacion.pesos_fijo("B", np.arange(120))
+        A = rng.random((7, 120))
+        G = self.ms.factores_crecimiento(R, W)
+        esperado = np.column_stack([simulacion.acumular(R, W, A[i]) for i in range(7)])   # (S, n)
+        np.testing.assert_allclose(A @ G.T, esperado.T, rtol=1e-10)
+
+    def test_shapley_reparte_toda_la_brecha(self):
+        from afp import escenarios
+        R = np.random.default_rng(5).normal(0.003, 0.02, (40, 480, 5))
+        b = self.ms.brecha_genero(R, n=400, semilla=3)
+        np.testing.assert_allclose(b.aporte_uf.sum(), b.attrs["hombre"] - b.attrs["mujer"], rtol=1e-9)
+
+
 class TestBandas(unittest.TestCase):
     def test_bandas_oficiales_en_config(self):
         from afp import config
