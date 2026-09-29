@@ -8,6 +8,7 @@
   `Brecha_genero`; sección "Población y género" en el tablero.
 - Rendimiento: `factores_crecimiento` devuelve un arreglo contiguo; la multiplicación usa BLAS (49 s → 7 s).
 - Pruebas: 35 (calibración, rachas, matmul = acumulación mes a mes, eficiencia de Shapley).
+- **Documento de trabajo** `docs/DOCUMENTO_TRABAJO.md` (resumen, datos, metodología, resultados, política, limitaciones) y `CITATION.cff`.
 
 ## 2026-09-29 (noche)
 - Repositorio publicado en GitHub (`tav0-m/AFP`); `.gitattributes` normaliza los finales de línea (LF).

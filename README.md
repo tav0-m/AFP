@@ -3,7 +3,7 @@
 [![ci](https://github.com/tav0-m/AFP/actions/workflows/ci.yml/badge.svg)](https://github.com/tav0-m/AFP/actions/workflows/ci.yml)
 [![pages](https://github.com/tav0-m/AFP/actions/workflows/pages.yml/badge.svg)](https://tav0-m.github.io/AFP/)
 
-**Tablero de resultados:** [tav0-m.github.io/AFP](https://tav0-m.github.io/AFP/) · **Simulador personal:** [tav0-m.github.io/AFP/simulador.html](https://tav0-m.github.io/AFP/simulador.html)
+**Documento de trabajo:** [docs/DOCUMENTO_TRABAJO.md](docs/DOCUMENTO_TRABAJO.md) · **Tablero de resultados:** [tav0-m.github.io/AFP](https://tav0-m.github.io/AFP/) · **Simulador personal:** [tav0-m.github.io/AFP/simulador.html](https://tav0-m.github.io/AFP/simulador.html)
 ### Riesgo, regímenes de mercado y pensiones en Chile (2002–2026)
 
 El 1 de abril de 2027 los cinco multifondos (A–E) serán reemplazados por diez **fondos generacionales**

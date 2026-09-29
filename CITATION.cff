@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "Si usa este trabajo, por favor cítelo así."
+title: "De multifondos a fondos generacionales: riesgo, regímenes y pensiones en Chile (2002-2026)"
+type: software
+authors:
+  - family-names: "Moran"
+    given-names: "Gustavo"
+repository-code: "https://github.com/tav0-m/AFP"
+date-released: 2026-09-29
+version: "1.0.0"
+keywords:
+  - pensiones
+  - fondos generacionales
+  - AFP
+  - Chile
+  - modelo oculto de Markov
+  - microsimulación
