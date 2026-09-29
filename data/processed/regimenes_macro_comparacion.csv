@@ -1,0 +1,4 @@
+modelo,log_score_promedio,meses,tvtp_menos_modelo,t_diebold_mariano,p_valor
+HMM constante,18.196881,140,-0.000765,-0.020681,0.983500
+HMM con macro (TVTP),18.196116,140,0.000000,,
+Normal (sin regímenes),17.459852,140,0.736263,3.412505,0.000644

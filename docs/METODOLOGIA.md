@@ -199,3 +199,25 @@ Reemplaza al afiliado tipo por una **cohorte sintética de 20.000 personas** que
 
 Limitaciones: la densidad y el ingreso de cada persona son estables durante toda su vida (salvo el perfil de edad);
 no hay movilidad entre quintiles. Tampoco se modelan cotizantes independientes ni ahorro voluntario.
+
+## 12. Regímenes con variables macro (`regimenes_macro.py`)
+
+Pregunta: ¿la macro chilena ayuda a anticipar los cambios de régimen?
+
+- **Datos**: IPC (variación mensual), TPM, dólar observado e Imacec desde la API pública de mindicador.cl
+  (`scripts/descarga_mindicador.py`), que republica series del BCCh y el INE. El cobre solo está desde 2013 y no se usa.
+- **Variables sin mirar al futuro**: inflación de 12 meses con 1 mes de rezago (el IPC se publica a inicios del mes
+  siguiente); cambio de la TPM en 6 meses; variación logarítmica del dólar en 3 meses; Imacec anual con 2 meses de
+  rezago. Se estandarizan con la media y la desviación de la ventana de entrenamiento.
+- **Modelo (TVTP-HMM; Diebold, Lee y Weinbach, 1994)**: P(s_{t+1}=j | s_t=i, z_t) = softmax_j(b_ij + w_ij·z_t), con
+  j = i como referencia. EM completo: forward-backward escalado con una matriz por mes; en el paso M, cada fila es una
+  regresión logística multinomial ponderada por las transiciones esperadas ξ_t, con penalización ridge (λ = 1) y
+  L-BFGS con gradiente analítico. Parte del HMM constante estimado (pesos w = 0).
+- **Evaluación walk-forward**: desde ene-2015 se reestima cada 12 meses solo con el pasado y se mide la densidad
+  predictiva a un paso, log p(r_{t+1} | información hasta t), en 140 meses. Se compara contra el HMM constante y una
+  normal multivariada sin regímenes, con el test de Diebold-Mariano con varianza HAC (Newey-West, 6 rezagos).
+
+Resultado: los regímenes mejoran claramente la predicción frente a la normal, pero el TVTP no mejora al HMM constante.
+El resultado se mantiene con λ = 0,1 (sobreajusta: −0,06 por mes) y λ = 10 (converge al constante). El BIC de la
+muestra completa también prefiere el modelo constante. Lectura: el régimen de tasas volátiles se inició una sola
+vez (2019), así que no hay transiciones suficientes para aprender sus gatillos.

@@ -14,7 +14,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 from afp import (bandas, config, econometria, escenarios, etl_valores_cuota,  # noqa: E402
-                 figuras, incertidumbre, microsimulacion, mortalidad, optimo, reforma, reporte_excel, retornos, robustez,
+                 figuras, incertidumbre, microsimulacion, mortalidad, optimo, reforma, regimenes_macro, reporte_excel, retornos, robustez,
                  simulacion)
 
 NOMBRES_REGIMEN = {3: ["Calma", "Tasas volátiles (post-2019)", "Crisis bursátil"],
@@ -78,6 +78,10 @@ def main():
     sigma = pd.DataFrame(sig)
     corr_ce = econometria.correlacion_movil(m, "C", "E").dropna()
 
+    paso("3c. Regímenes con variables macro (TVTP-HMM, walk-forward 2015-2026)")
+    macro_ok = (config.DATA_RAW / "macro_mindicador.csv").exists() and modelo["K"] == 3
+    tvtp = regimenes_macro.evaluar(m[config.FONDOS], modelo) if macro_ok else None
+
     paso("4. Monte Carlo (bootstrap condicionado a régimen)")
     p = config.SIM
     R = escenarios.simular(m[config.FONDOS], modelo, meses=480, n=p["n_simulaciones"], semilla=p["semilla"])
@@ -133,6 +137,8 @@ def main():
     figuras.glidepath()
     figuras.glidepath_optimo(opt_res)
     figuras.poblacion_quintiles(micro["quintil"])
+    if tvtp is not None:
+        figuras.prediccion_regimenes(tvtp["walk_forward"], tvtp["comparacion"])
     figuras.brecha_genero(micro["brecha"])
     for sexo in ("H", "M"):
         figuras.pilares(ref_ing[ref_ing.sexo == sexo], sexo)
@@ -164,6 +170,8 @@ def main():
     ms_s, ms_q, ms_b = micro["sexo"].set_index("sexo"), micro["quintil"], micro["brecha"]
     qH = ms_q[ms_q.sexo == "H"].set_index("quintil")
     top = ms_b.iloc[ms_b.aporte_pp_brecha.idxmax()]
+    tc = tvtp["comparacion"].set_index("modelo") if tvtp is not None else None
+    ef = tvtp["efectos"] if tvtp is not None else None
     n_pers = f"{config.MICROSIM['n_personas'] // 1000} mil"
     hallazgos = [
         ("La inflación se lleva ~3,9 puntos al año: la rentabilidad real es mucho menor que la publicitada.",
@@ -243,7 +251,17 @@ def main():
          f"La pensión total mediana de una mujer es {-ms_b.attrs['brecha']:.0%} menor que la de un hombre. Descomposición de Shapley: "
          + "; ".join(f"{r.factor.lower()} {r.aporte_pp_brecha * 100:.1f} pp" for r in ms_b.itertuples() if "Residuo" not in r.factor)
          + f". El factor más importante es «{top.factor}», con {top.aporte_pp_brecha / -ms_b.attrs['brecha']:.0%} de la brecha."),
-    ]
+    ] + ([
+        ("Los regímenes mejoran la predicción del mes siguiente, pero las variables macro no ayudan a anticiparlos.",
+         f"Validación fuera de muestra 2015-2026 ({int(tc.loc['HMM constante', 'meses'])} meses, reestimación anual): el HMM "
+         f"supera a una normal sin regímenes en {tc.loc['HMM constante', 'log_score_promedio'] - tc.loc['Normal (sin regímenes)', 'log_score_promedio']:+.2f} de log-score por mes "
+         f"(Diebold-Mariano p = {tc.loc['Normal (sin regímenes)', 'p_valor']:.3f}). Agregar IPC, TPM, dólar e Imacec a las transiciones "
+         f"(TVTP) no mejora: {tc.loc['HMM constante', 'tvtp_menos_modelo']:+.3f} por mes (p = {tc.loc['HMM constante', 'p_valor']:.2f}). "
+         f"Dentro de muestra, una TPM que sube 1 desviación estándar eleva la probabilidad de pasar de la calma a la crisis de "
+         f"{ef[(ef.desde == 0) & (ef.hacia == 2) & ef.variable.str.startswith('Cambio de la TPM')].prob_base.iloc[0]:.0%} a "
+         f"{ef[(ef.desde == 0) & (ef.hacia == 2) & ef.variable.str.startswith('Cambio de la TPM')]['prob_con_+1sd'].iloc[0]:.0%}, pero el "
+         f"quiebre de 2019 ocurrió una sola vez: no hay transiciones suficientes para aprender qué lo gatilla."),
+    ] if tvtp is not None else [])
 
     import re
     hallazgos = [(re.sub(r"(\d)\.(\d)", r"\1,\2", a), re.sub(r"(\d)\.(\d)", r"\1,\2", b)) for a, b in hallazgos]
@@ -265,6 +283,7 @@ def main():
         "Market Assumptions 2026).",
         "Reforma de pensiones: Ley N.º 21.735; Subsecretaría de Previsión Social, Nota Técnica (ago-2025), tablas 1, 3 y 5. "
         "PGU y umbrales de pensión base: SP (vigentes desde el 01-02-2026).",
+        "Variables macro (IPC, TPM, dólar observado, Imacec): API pública de mindicador.cl, que republica series del BCCh y el INE.",
     ]
     res = dict(rango_datos=f"{vc.fecha.min():%d-%m-%Y} a {vc.fecha.max():%d-%m-%Y}", hallazgos=hallazgos,
                uf_ultima=float(uf.uf.iloc[-1]), uf_fecha=f"{uf.fecha.iloc[-1]:%d-%m-%Y}",
@@ -272,6 +291,8 @@ def main():
                bic_texto="; ".join(f"K={int(r.K)}: BIC {r.BIC:,.1f}" for r in tabla_bic.itertuples()),
                transicion=modelo["A"], garch=garch, montecarlo=mc, sensibilidad=sens,
                backtest=pd.concat([b.assign(sexo=s) for s, b in back.items()]), bandas=fb, robustez=rob, esg=esg, reforma=ref_res, reforma_ingreso=ref_ing, optimo=opt_res,
+               tvtp_comparacion=tvtp["comparacion"] if tvtp is not None else None,
+               tvtp_efectos=tvtp["efectos"] if tvtp is not None else None,
                micro_sexo=micro["sexo"], micro_quintil=micro["quintil"], micro_brecha=micro["brecha"],
                incertidumbre=pd.concat([inc["resumen_pensiones"].assign(bloque="Pensiones (historia remuestreada)"),
                                         inc["resumen_hmm"].assign(bloque="HMM (paramétrico)"),
@@ -295,6 +316,10 @@ def main():
     opt_res.to_csv(config.DATA_PROC / "glidepath_optimo.csv", index=False, float_format="%.5f")
     for k in ("sexo", "quintil", "brecha"):
         micro[k].to_csv(config.DATA_PROC / f"microsimulacion_{k}.csv", index=False, float_format="%.5f")
+    if tvtp is not None:
+        tvtp["walk_forward"].to_csv(config.DATA_PROC / "regimenes_macro_walk_forward.csv", float_format="%.6f")
+        tvtp["comparacion"].to_csv(config.DATA_PROC / "regimenes_macro_comparacion.csv", index=False, float_format="%.6f")
+        tvtp["efectos"].to_csv(config.DATA_PROC / "regimenes_macro_efectos.csv", index=False, float_format="%.5f")
     opt_comp.to_csv(config.DATA_PROC / "glidepath_optimo_comparacion.csv", index=False, float_format="%.5f")
     ref_ing.to_csv(config.DATA_PROC / "pension_total_por_ingreso.csv", index=False, float_format="%.5f")
     for k in ("hmm", "garch", "pensiones"):

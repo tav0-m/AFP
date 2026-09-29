@@ -264,6 +264,42 @@ class TestMicrosimulacion(unittest.TestCase):
         np.testing.assert_allclose(b.aporte_uf.sum(), b.attrs["hombre"] - b.attrs["mujer"], rtol=1e-9)
 
 
+class TestRegimenesMacro(unittest.TestCase):
+    def setUp(self):
+        from afp import regimenes_macro
+        self.rm = regimenes_macro
+
+    def test_transiciones_suman_uno_y_w0_es_constante(self):
+        rng = np.random.default_rng(0)
+        b = rng.normal(0, 1, (3, 3)); np.fill_diagonal(b, 0); W = np.zeros((3, 3, 4))
+        A = self.rm.matrices_transicion(b, W, rng.normal(0, 1, (10, 4)))
+        np.testing.assert_allclose(A.sum(2), 1.0)
+        np.testing.assert_allclose(A[0], A[-1])                    # sin pesos, no depende de z
+
+    def test_forward_backward_tv_igual_al_constante(self):
+        from afp import econometria as eco
+        rng = np.random.default_rng(1)
+        logB = rng.normal(0, 3, (60, 3)); A = rng.dirichlet(np.ones(3), 3); pi = np.array([.2, .3, .5])
+        ll_c, g_c, xi_c = eco._forward_backward(logB, np.log(pi), np.log(A))
+        ll_t, g_t, xi_t, _ = self.rm._forward_backward_tv(logB, pi, np.repeat(A[None], 59, 0))
+        self.assertAlmostEqual(ll_c, ll_t, places=8)
+        np.testing.assert_allclose(g_c, g_t, atol=1e-10); np.testing.assert_allclose(xi_c, xi_t.sum(0), atol=1e-9)
+
+    def test_variables_sin_mirar_al_futuro(self):
+        import pandas as pd
+        idx = pd.date_range("2010-01-31", periods=30, freq="ME")
+        macro = pd.DataFrame({"ipc": np.r_[np.zeros(20), 10.0, np.zeros(9)], "tpm": 1.0, "dolar": 800.0, "imacec": 2.0},
+                             index=idx)
+        z = self.rm.construir_variables(macro, idx)
+        self.assertEqual(z.inflacion_12m.iloc[20], 0)              # el shock de IPC del mes 20 se ve recién en el 21
+        self.assertGreater(z.inflacion_12m.iloc[21], 0.09)
+
+    def test_diebold_mariano(self):
+        d = np.random.default_rng(2).normal(0.5, 1, 400)
+        t, p = self.rm.diebold_mariano(d)
+        self.assertGreater(t, 3); self.assertLess(p, 0.01)
+
+
 class TestBandas(unittest.TestCase):
     def test_bandas_oficiales_en_config(self):
         from afp import config

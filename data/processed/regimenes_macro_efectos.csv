@@ -1,0 +1,25 @@
+variable,desde,hacia,prob_base,prob_con_+1sd,cambio_pp
+"Inflación 12 meses (IPC, rezago 1 mes)",0,1,0.00711,0.00615,-0.00097
+"Inflación 12 meses (IPC, rezago 1 mes)",0,2,0.04028,0.10839,0.06811
+"Inflación 12 meses (IPC, rezago 1 mes)",1,0,0.00000,0.00000,0.00000
+"Inflación 12 meses (IPC, rezago 1 mes)",1,2,0.01386,0.00807,-0.00579
+"Inflación 12 meses (IPC, rezago 1 mes)",2,0,0.47272,0.45897,-0.01375
+"Inflación 12 meses (IPC, rezago 1 mes)",2,1,0.00000,0.00000,0.00000
+Cambio de la TPM en 6 meses,0,1,0.00711,0.00821,0.00110
+Cambio de la TPM en 6 meses,0,2,0.04028,0.16417,0.12389
+Cambio de la TPM en 6 meses,1,0,0.00000,0.00000,0.00000
+Cambio de la TPM en 6 meses,1,2,0.01386,0.00985,-0.00401
+Cambio de la TPM en 6 meses,2,0,0.47272,0.50651,0.03378
+Cambio de la TPM en 6 meses,2,1,0.00000,0.00000,-0.00000
+Variación del dólar en 3 meses,0,1,0.00711,0.00622,-0.00089
+Variación del dólar en 3 meses,0,2,0.04028,0.03101,-0.00927
+Variación del dólar en 3 meses,1,0,0.00000,0.00000,-0.00000
+Variación del dólar en 3 meses,1,2,0.01386,0.01736,0.00350
+Variación del dólar en 3 meses,2,0,0.47272,0.45914,-0.01359
+Variación del dólar en 3 meses,2,1,0.00000,0.00000,0.00000
+Imacec anual (rezago 2 meses),0,1,0.00711,0.00222,-0.00489
+Imacec anual (rezago 2 meses),0,2,0.04028,0.02939,-0.01089
+Imacec anual (rezago 2 meses),1,0,0.00000,0.00000,-0.00000
+Imacec anual (rezago 2 meses),1,2,0.01386,0.01561,0.00175
+Imacec anual (rezago 2 meses),2,0,0.47272,0.53343,0.06070
+Imacec anual (rezago 2 meses),2,1,0.00000,0.00000,-0.00000

@@ -1,5 +1,13 @@
 # Registro de cambios
 
+## 2026-09-30 (tarde)
+- Licencias: MIT para el código (`LICENSE`) y CC BY 4.0 para documentos, figuras y tablero (`LICENSE-CONTENIDO.md`).
+- **Regímenes con variables macro** (hoja de ruta 2.2): `scripts/descarga_mindicador.py` (API pública, sin
+  credenciales) y `regimenes_macro.py` (TVTP-HMM con EM propio, walk-forward 2015-2026, Diebold-Mariano HAC).
+  Hallazgo 15 y figura 15: los regímenes predicen mejor que una normal (p < 0,001), pero la macro no agrega capacidad
+  predictiva fuera de muestra (p = 0,98). Hojas Excel `Regimenes_macro` y `Regimenes_macro_efectos`.
+- Pruebas: 39 (transiciones, equivalencia con el forward-backward constante, variables sin mirar al futuro, test DM).
+
 ## 2026-09-30
 - **Microsimulación poblacional** (hoja de ruta 2.4): `microsimulacion.py`, una cohorte de 20.000 personas con ingreso
   y densidad calibrados con la SP, lagunas como rachas (Markov) y un mercado común; se calcula con una multiplicación de

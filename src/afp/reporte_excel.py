@@ -212,6 +212,17 @@ def construir(ruta, r: dict):
                notas=["Familia: meseta g0 hasta la edad a1 y baja lineal hasta g1 al retiro; réplica con multifondos.",
                       "Criterio: utilidad CRRA de la pensión total (con_reforma = cotización del empleador, rentabilidad protegida y PGU).",
                       "Grilla evaluada en escenarios de entrenamiento; resultados reportados en escenarios de prueba independientes."])
+    if r.get("tvtp_comparacion") is not None:
+        fm = {"log_score_promedio": "0.0000", "tvtp_menos_modelo": "0.0000", "t_diebold_mariano": "0.00", "p_valor": "0.000",
+              "prob_base": pct, "prob_con_+1sd": pct, "cambio_pp": pct}
+        _tabla(wb, "Regimenes_macro", r["tvtp_comparacion"], fm,
+               titulo="¿Ayuda la macro a predecir? Densidad predictiva a un paso fuera de muestra (walk-forward 2015-2026)",
+               notas=["Log-score = log p(retornos del mes siguiente | información hasta hoy); mayor es mejor.",
+                      "Diebold-Mariano con varianza HAC (Newey-West, 6 rezagos) sobre la diferencia mensual TVTP − modelo.",
+                      "TVTP: probabilidades de transición = softmax(b + w·z), z = inflación 12m, ΔTPM 6m, dólar 3m, Imacec (rezagados)."])
+        _tabla(wb, "Regimenes_macro_efectos", r["tvtp_efectos"], fm,
+               titulo="Efecto de +1 desviación estándar de cada variable sobre la probabilidad de cambiar de régimen (muestra completa)",
+               notas=["Regímenes: 0 = calma, 1 = tasas volátiles (post-2019), 2 = crisis bursátil."])
     if "micro_sexo" in r:
         fm = {c: pct for c in ("densidad_media", "tr_10_mediana", "tr_total_mediana", "prob_tr_meta_10", "prob_tr_meta_total",
                                "pct_pgu_mayor_mitad", "cv_vs_defecto_mediana", "pct_personas_cv_gana", "pct_sin_pension",

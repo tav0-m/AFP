@@ -152,7 +152,18 @@ La pensión total mediana de una mujer es 36% menor que la de un hombre. La desc
 | Esperanza de vida | 4,1 | 11% |
 | Residuo | 0,7 | 2% |
 
-### 4.6 Premios y castigos
+### 4.6 ¿Anticipa la macro los regímenes?
+
+Los regímenes mejoran la predicción del mes siguiente, pero la macro chilena no ayuda a anticiparlos. En 140 meses
+fuera de muestra (2015–2026, reestimación anual), el HMM supera a una normal sin regímenes en 0,74 de log-score por
+mes (Diebold-Mariano, p < 0,001). Hacer que las transiciones dependan de la inflación, la TPM, el dólar y el Imacec
+(TVTP) no mejora: −0,001 por mes (p = 0,98), con cualquier penalización. Dentro de muestra, una TPM que sube una
+desviación estándar eleva de 4% a 16% la probabilidad de pasar de la calma a la crisis, pero el quiebre de 2019
+ocurrió una sola vez y no hay transiciones suficientes para aprender qué lo gatilla.
+
+![Regímenes y macro](../reports/figuras/15_regimenes_macro.png)
+
+### 4.7 Premios y castigos
 
 Las bandas oficiales son unas tres veces más anchas que la dispersión histórica entre AFP: 95% de las desviaciones de 36 meses frente a los pares es menor a 0,83 puntos, contra bandas de ±2,4 a ±2,9 puntos (±4,0 en la transición). Con la referencia de pares, solo 0,2% de los meses-AFP habría quedado fuera de la banda más estrecha. El incentivo real dependerá de cuánto se aleje la cartera de referencia oficial de lo que hoy invierten las AFP.
 
@@ -177,7 +188,7 @@ La conclusión robusta es el signo y el orden de magnitud de cada efecto, no su 
 - **Beneficios no modelados.** El Beneficio por Años Cotizados (no aplica a esta cohorte) y la compensación por expectativa de vida (solo desde los 65 años).
 - **Bandas con referencia de pares.** La prueba usa el promedio de las demás AFP y no los índices de la cartera de referencia oficial.
 
-Trabajo futuro: regímenes con probabilidades de transición que dependan de variables macro (tasa de política monetaria, IPC, dólar, cobre); la cartera de referencia oficial con índices de mercado; programación dinámica del glidepath óptimo; y un monitor mensual de las AFP frente a sus bandas desde abril de 2027.
+Trabajo futuro: la cartera de referencia oficial con índices de mercado; programación dinámica del glidepath óptimo; y un monitor mensual de las AFP frente a sus bandas desde abril de 2027.
 
 ## 7. Reproducibilidad y fuentes
 
@@ -197,5 +208,9 @@ Fuentes consultadas:
 - Hacienda y SP, [datos de brecha de género en el sistema previsional](https://www.hacienda.cl/noticias-y-eventos/noticias/reforma-previsional-superintendencia-de-pensiones-presenta-datos-de-brecha-de).
 - J.P. Morgan Asset Management, [Long-Term Capital Market Assumptions 2026](https://am.jpmorgan.com/us/en/asset-management/institutional/about-us/media/press-releases/jp-morgan-releases-2026-long-term-capital-market-assumptions/).
 - Banco Central de Chile, [Base de Datos Estadísticos](https://si3.bcentral.cl) (UF y tasas de bonos en UF).
+- [mindicador.cl](https://mindicador.cl), API pública de indicadores (IPC, TPM, dólar observado, Imacec).
 
-Métodos: Rabiner (1989) para el forward-backward escalado; Bollerslev (1986) para el GARCH; Politis y Romano (1994) para el bootstrap estacionario; Shapley (1953) para la descomposición de la brecha.
+Licencia: este documento se distribuye bajo [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.es).
+
+Métodos: Rabiner (1989) para el forward-backward escalado; Diebold, Lee y Weinbach (1994) para las transiciones
+variables; Diebold y Mariano (1995) para comparar predicciones; Bollerslev (1986) para el GARCH; Politis y Romano (1994) para el bootstrap estacionario; Shapley (1953) para la descomposición de la brecha.

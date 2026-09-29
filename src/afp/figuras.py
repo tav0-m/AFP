@@ -388,3 +388,26 @@ def brecha_genero(b: pd.DataFrame):
     return _cerrar(fig, ax, f"¿De dónde viene la brecha de género? La pensión total de una mujer es {-b.attrs['brecha'] * 100:.0f}% menor\n"
                             "Shapley: aporte de cada factor, promediado sobre todos los órdenes posibles", "14_brecha_genero.png",
                    nota="Microsimulación, fondo por defecto, consenso 2026. Mortalidad: tablas CB-H/RV-M 2020 (CMF). Elaboración propia.")
+
+
+def prediccion_regimenes(wf: pd.DataFrame, comp: pd.DataFrame):
+    """Log-score acumulado fuera de muestra frente a una normal sin regímenes (mayor = predice mejor)."""
+    fig, ax = _base()
+    base = wf["Normal (sin regímenes)"]
+    estilos = {"HMM constante": (COLOR_FONDO["A"], "-", 2.4), "HMM con macro (TVTP)": (COLOR_FONDO["B"], (0, (4, 3)), 2)}
+    for col, (c, ls, lw) in estilos.items():
+        s = (wf[col] - base).cumsum()
+        ax.plot(s.index, s, color=c, lw=lw, ls=ls)
+        fila = comp.set_index("modelo").loc[col]
+        ax.annotate(f"{col}: {es(s.iloc[-1], 1)}", (s.index[-1], s.iloc[-1]), xytext=(6, -12 if "TVTP" in col else 8),
+                    textcoords="offset points", fontsize=9.5, color=TXT)
+    ax.axhline(0, color=TXT2, lw=1)
+    ax.annotate("normal sin regímenes (= 0)", (base.index[-1], 0), xytext=(6, 4), textcoords="offset points", fontsize=8.5, color=TXT2)
+    ax.set_xlim(base.index[0], base.index[-1] + pd.Timedelta(days=1300)); _anios(ax, 2015, 2026, 1)
+    ax.set_ylabel("Log-score acumulado vs normal", color=TXT2)
+    t = comp.set_index("modelo").loc["HMM constante"]
+    return _cerrar(fig, ax, "¿Ayuda la macro a anticipar los regímenes? Densidad predictiva fuera de muestra, 2015–2026\n"
+                            f"los regímenes predicen mejor que una normal; la macro no agrega (TVTP − constante: {es(t.tvtp_menos_modelo, 3)} por mes, "
+                            f"p = {es(t.p_valor, 2)})",
+                   "15_regimenes_macro.png",
+                   nota="Walk-forward: reestimación anual con datos pasados. Macro: mindicador.cl (IPC, TPM, dólar, Imacec). Elaboración propia.")
